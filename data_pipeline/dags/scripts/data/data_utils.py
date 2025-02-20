@@ -2,7 +2,7 @@ import re
 import string
 import nltk
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
+# from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from autocorrect import Speller
 
@@ -83,9 +83,14 @@ def clean_response(response):
 
 def clean_text(**context):
     """Clean and standardize text."""
-    queries = context['ti'].xcom_pull(task_ids='get_initial_queries', key='initial_queries')
-    cleaned_queries = [clean_text_using_lemmatizer(q['question']) for q in queries]
-    cleaned_responses = [clean_text_using_lemmatizer(q['responses']) for q in queries]
+    queries = context['ti'].xcom_pull(task_ids='get_initial_queries')
+    response = context['ti'].xcom_pull(task_ids='get_initial_response')
+
+    print(queries)
+    print(response)
+
+    cleaned_queries = [clean_text_using_lemmatizer(q) for q in queries]
+    cleaned_responses = [clean_text_using_lemmatizer(r) for r in response]
 
     print(cleaned_queries)
     print(cleaned_responses)

@@ -4,3 +4,5 @@ kneed
 google-cloud-bigquery
 apache-airflow-providers-google
 jinja2
+nltk
+autocorrect

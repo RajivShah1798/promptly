@@ -30,12 +30,19 @@ def get_bq_data(**context):
     """
     
     query_job = client.query(query)
-    query_results = query_job.result()
+    query_results = query_job.to_dataframe()
     
     for row in query_results:
         print(row)
+
+    user_queries = query_results['question'].tolist()
+    user_response = query_results['response'].tolist()
+
+    print('UQ', user_queries)
+    print('UR', user_response)
     
-    context['ti'].xcom_push(key='get_initial_queries', value=query_results)
+    context['ti'].xcom_push(key='get_initial_queries', value=query_results['question'].tolist())
+    context['ti'].xcom_push(key='get_initial_response', value=query_results['response'].tolist())
     
     return "Succeeded!"
 
@@ -155,35 +162,35 @@ def perform_similarity_search(**context):
     return "generate_samples"
 '''
 
-def upload_gcs_to_bq(**context):
-    """
-    Uploads the generated sample data from GCS to BigQuery.
+# def upload_gcs_to_bq(**context):
+#     """
+#     Uploads the generated sample data from GCS to BigQuery.
 
-    This task will only run if the "check_sample_count" task does not return "stop_task".
-    Otherwise, this task will return "stop_task" without performing any actions.
+#     This task will only run if the "check_sample_count" task does not return "stop_task".
+#     Otherwise, this task will return "stop_task" without performing any actions.
 
-    The sample data is loaded from the 'processed_trace_data' folder in the default GCS bucket.
-    The data is uploaded to the table specified in the 'train_data_table_name' variable.
+#     The sample data is loaded from the 'processed_trace_data' folder in the default GCS bucket.
+#     The data is uploaded to the table specified in the 'train_data_table_name' variable.
 
-    :param context: Airflow context object
-    :return: "generate_samples" if successful, "stop_task" if not
-    """
-    task_status = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
+#     :param context: Airflow context object
+#     :return: "generate_samples" if successful, "stop_task" if not
+#     """
+#     task_status = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
     
-    if task_status == "stop_task":
-        return "stop_task"
+#     if task_status == "stop_task":
+#         return "stop_task"
 
-    load_to_bigquery = GCSToBigQueryOperator(
-        task_id='load_to_bigquery',
-        bucket=Variable.get('default_bucket_name'),
-        source_objects=['processed_trace_data/llm_train_data.pq'],
-        destination_project_dataset_table=Variable.get('train_data_table_name'),
-        write_disposition='WRITE_APPEND',
-        autodetect=True,
-        skip_leading_rows=1,
-        dag=context['dag'],
-        source_format='PARQUET', 
-    )
+#     load_to_bigquery = GCSToBigQueryOperator(
+#         task_id='load_to_bigquery',
+#         bucket=Variable.get('default_bucket_name'),
+#         source_objects=['processed_trace_data/llm_train_data.pq'],
+#         destination_project_dataset_table=Variable.get('train_data_table_name'),
+#         write_disposition='WRITE_APPEND',
+#         autodetect=True,
+#         skip_leading_rows=1,
+#         dag=context['dag'],
+#         source_format='PARQUET', 
+#     )
 
-    load_to_bigquery.execute(context=context)
-    return "generate_samples"
+#     load_to_bigquery.execute(context=context)
+#     return "generate_samples"

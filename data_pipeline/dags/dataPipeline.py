@@ -44,6 +44,7 @@ dag = DAG(
 fetch_bq_queries = PythonOperator(
     task_id="fetch_queries_task",
     python_callable=get_bq_data,
+    provide_context = True,
     dag=dag,
 )
 
@@ -88,7 +89,7 @@ send_success_email_dag = PythonOperator(
 
 # Set task dependencies
 # load_data_task >> fetch_bq_queries >> data_preprocessing_task
-fetch_bq_queries >> send_success_email_dag
+fetch_bq_queries >> clean_queries >> send_success_email_dag
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":
