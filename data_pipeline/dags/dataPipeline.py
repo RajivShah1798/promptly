@@ -46,6 +46,7 @@ fetch_bq_queries = PythonOperator(
 send_success_email_dag = PythonOperator(
     task_id="send_success_email",
     python_callable=send_success_email,
+    provide_context = True,
     dag=dag,
 )
 
