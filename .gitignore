@@ -3,3 +3,5 @@ __pycache__/
 data_pipeline/dags/**/__pycache__/
 *.pyc
 .cache/
+keys/
+*.DS_Store
