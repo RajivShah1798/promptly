@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import pandas as pd
 # from airflow.models import Variable
 from supabase import create_client
 from airflow.models import Variable
@@ -151,3 +152,31 @@ def perform_similarity_search(**context):
     context['ti'].xcom_push(key='similarity_results', value=query_response)
     return "generate_samples"
 '''
+
+def push_to_dvc(**context):
+    """
+    Saves the updated data as a CSV file and pushes it to GCP via DVC.
+    """
+    # Retrieve data from XCom
+    user_queries = context['ti'].xcom_pull(task_ids="get_supabase_data", key="get_initial_queries")
+    user_responses = context['ti'].xcom_pull(task_ids="get_supabase_data", key="get_initial_response")
+
+    if not user_queries or not user_responses:
+        raise ValueError("No data found in XCom for DVC push.")
+
+    # Create DataFrame and save as CSV
+    dvc_data_path = "data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
+    df = pd.DataFrame({"question": user_queries, "response": user_responses})
+    df.to_csv(dvc_data_path, index=False)
+
+    try:
+        # DVC Add, Commit, and Push to GCP Bucket
+        subprocess.run(["dvc", "add", dvc_data_path], check=True)
+        # subprocess.run(["git", "add", dvc_data_path + ".dvc"], check=True)
+        # subprocess.run(["git", "commit", "-m", "Updated user queries data"], check=True)
+        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # Push to GCP Bucket
+        # subprocess.run(["git", "push"], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"DVC push failed: {e}")
+
+    return "DVC Push to GCS Succeeded!"
