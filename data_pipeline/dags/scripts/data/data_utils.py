@@ -83,11 +83,8 @@ def clean_response(response):
 
 def clean_text(**context):
     """Clean and standardize text."""
-    queries = context['ti'].xcom_pull(task_ids='get_initial_queries')
-    response = context['ti'].xcom_pull(task_ids='get_initial_response')
-
-    print(queries)
-    print(response)
+    queries = context['ti'].xcom_pull(task_ids='get_supabase_data', key='get_initial_queries')
+    response = context['ti'].xcom_pull(task_ids='get_supabase_data', key='get_initial_response')
 
     cleaned_queries = [clean_text_using_lemmatizer(q) for q in queries]
     cleaned_responses = [clean_text_using_lemmatizer(r) for r in response]

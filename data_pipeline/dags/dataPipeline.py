@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from scripts.lab import load_data, data_preprocessing, build_save_model,load_model_elbow
-from scripts.bigq.bigquery_utils import get_bq_data
+from scripts.bigq.bigquery_utils import get_supabase_data
 from scripts.email_utils import send_success_email
 from scripts.data.data_utils import clean_text
 
@@ -43,7 +43,7 @@ dag = DAG(
 
 fetch_bq_queries = PythonOperator(
     task_id="fetch_queries_task",
-    python_callable=get_bq_data,
+    python_callable=get_supabase_data,
     provide_context = True,
     dag=dag,
 )

@@ -1,49 +1,39 @@
 import logging
-from google.cloud import bigquery
 import os
+import subprocess
 # from airflow.models import Variable
-from scripts.data.data_utils import remove_punctuation
-# from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-#     GCSToBigQueryOperator
-# )
-# from scripts.llm_utils import generate_sample_queries
-# from scripts.constants import TARGET_SAMPLE_COUNT
-# from airflow.models import DagRun
+from supabase import create_client
+from airflow.models import Variable
 
-def get_bq_data(**context):
+# Load Supabase credentials (replace with Airflow Variable or environment variable)
+SUPABASE_URL = os.getenv("SUPABASE_URL") # Variable.get("SUPABASE_URL")  # Or
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") # Variable.get("SUPABASE_KEY")  # Or 
+
+# Initialize Supabase client
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def get_supabase_data(**context):
     """
-    Retrieves data from bigquery
+    Retrieves data from Supabase user_queries table.
     """
-    # sample_count = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
-    # if sample_count == "stop_task":
-    #     return "stop_task"
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/ronak/Documents/Spring24/MLOps/promptly/keys/adroit-chemist-450622-c4-824fc34978e0.json"
+    response = supabase.table("user_queries").select("*").execute()
 
-    client = bigquery.Client()
-    project_id = "adroit-chemist-450622-c4"
-    
-    dataset_id = "promptly_queries"
-    table_id = "user_queries"
-    
-    query = f"""
-        SELECT * FROM `{client.project}.{dataset_id}.{table_id}`
-    """
-    
-    query_job = client.query(query)
-    query_results = query_job.to_dataframe()
-    
-    for row in query_results:
-        print(row)
+    if response.data is None:
+        raise ValueError("No data returned from Supabase.")
 
-    user_queries = query_results['question'].tolist()
-    user_response = query_results['response'].tolist()
+    query_results = response.data  # List of dicts
 
-    print('UQ', user_queries)
-    print('UR', user_response)
-    
-    context['ti'].xcom_push(key='get_initial_queries', value=query_results['question'].tolist())
-    context['ti'].xcom_push(key='get_initial_response', value=query_results['response'].tolist())
-    
+    # Extract questions and responses
+    user_queries = [row["question"] for row in query_results]
+    user_responses = [row["response"] for row in query_results]
+
+    print("User Queries:", user_queries)
+    print("User Responses:", user_responses)
+
+    # Push to XCom for other tasks
+    context['ti'].xcom_push(key='get_initial_queries', value=user_queries)
+    context['ti'].xcom_push(key='get_initial_response', value=user_responses)
+
     return "Succeeded!"
 
 '''
@@ -161,36 +151,3 @@ def perform_similarity_search(**context):
     context['ti'].xcom_push(key='similarity_results', value=query_response)
     return "generate_samples"
 '''
-
-# def upload_gcs_to_bq(**context):
-#     """
-#     Uploads the generated sample data from GCS to BigQuery.
-
-#     This task will only run if the "check_sample_count" task does not return "stop_task".
-#     Otherwise, this task will return "stop_task" without performing any actions.
-
-#     The sample data is loaded from the 'processed_trace_data' folder in the default GCS bucket.
-#     The data is uploaded to the table specified in the 'train_data_table_name' variable.
-
-#     :param context: Airflow context object
-#     :return: "generate_samples" if successful, "stop_task" if not
-#     """
-#     task_status = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
-    
-#     if task_status == "stop_task":
-#         return "stop_task"
-
-#     load_to_bigquery = GCSToBigQueryOperator(
-#         task_id='load_to_bigquery',
-#         bucket=Variable.get('default_bucket_name'),
-#         source_objects=['processed_trace_data/llm_train_data.pq'],
-#         destination_project_dataset_table=Variable.get('train_data_table_name'),
-#         write_disposition='WRITE_APPEND',
-#         autodetect=True,
-#         skip_leading_rows=1,
-#         dag=context['dag'],
-#         source_format='PARQUET', 
-#     )
-
-#     load_to_bigquery.execute(context=context)
-#     return "generate_samples"

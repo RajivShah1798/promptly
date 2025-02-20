@@ -6,3 +6,4 @@ apache-airflow-providers-google
 jinja2
 nltk
 autocorrect
+dvc
