@@ -10,7 +10,7 @@ from scripts.data.data_utils import remove_punctuation
 # from scripts.constants import TARGET_SAMPLE_COUNT
 # from airflow.models import DagRun
 
-def get_bq_data():
+def get_bq_data(**context):
     """
     Retrieves data from bigquery
     """
@@ -30,10 +30,12 @@ def get_bq_data():
     """
     
     query_job = client.query(query)
-    results = query_job.result()
+    query_results = query_job.result()
     
-    for row in results:
+    for row in query_results:
         print(row)
+    
+    context['ti'].xcom_push(key='get_initial_queries', value=query_results)
     
     return "Succeeded!"
 
