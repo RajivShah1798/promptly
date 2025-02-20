@@ -4,6 +4,7 @@ from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from scripts.lab import load_data, data_preprocessing, build_save_model,load_model_elbow
 from scripts.bigq.bigquery_utils import get_bq_data
+from scripts.email_utils import send_success_email
 
 from airflow import configuration as conf
 
@@ -42,6 +43,12 @@ fetch_bq_queries = PythonOperator(
     dag=dag,
 )
 
+send_success_email_dag = PythonOperator(
+    task_id="send_success_email",
+    python_callable=send_success_email,
+    dag=dag,
+)
+
 # Task to perform data preprocessing, depends on 'load_data_task'
 # data_preprocessing_task = PythonOperator(
 #     task_id='data_preprocessing_task',
@@ -69,7 +76,7 @@ fetch_bq_queries = PythonOperator(
 
 # Set task dependencies
 # load_data_task >> fetch_bq_queries >> data_preprocessing_task
-fetch_bq_queries
+fetch_bq_queries >> send_success_email_dag
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":
