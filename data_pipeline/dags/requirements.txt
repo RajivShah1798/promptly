@@ -8,3 +8,5 @@ nltk
 autocorrect
 dvc
 dvc_gs
+supabase
+python-dotenv
