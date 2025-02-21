@@ -1,5 +1,20 @@
 import re
 import string
+import nltk
+from nltk.tokenize import word_tokenize
+# from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from autocorrect import Speller
+
+# Download necessary NLTK resources
+nltk.download('punkt')
+# nltk.download('stopwords')
+nltk.download('wordnet')
+
+# Initialize components
+lemmatizer = WordNetLemmatizer()
+spell = Speller(lang='en')
+# stop_words = set(stopwords.words('english'))
 
 def remove_punctuation(text):
     """
@@ -18,6 +33,33 @@ def remove_punctuation(text):
     punts = string.punctuation
     new_text = ''.join(e for e in text if e not in punts)
     return new_text
+
+def clean_text_using_lemmatizer(text):
+    """Cleans and preprocesses user queries."""
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Remove URLs
+    text = re.sub(r'https?://\S+|www\.\S+', '', text)
+    
+    # Remove special characters, numbers, and punctuation
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    
+    # Tokenization
+    tokens = word_tokenize(text)
+    
+    # Remove stopwords
+    # tokens = [word for word in tokens if word not in stop_words]
+    
+    # Lemmatization
+    tokens = [lemmatizer.lemmatize(word) for word in tokens]
+    
+    # Optional: Spell Correction (Can be removed if latency is a concern)
+    tokens = [spell(word) for word in tokens]
+    
+    return ' '.join(tokens)
+
 
 def clean_response(response):
     """Remove leading index numbers from a response."""
@@ -38,9 +80,19 @@ def clean_response(response):
     response = response.replace("\t", " ")
     return response
 
-def clean_text(text):
+
+def clean_text(**context):
     """Clean and standardize text."""
-    text = text.strip()
-    text = ''.join(e for e in text if e.isalnum() or e.isspace() or e in string.punctuation)
-    text = text.lower()
-    return text
+    queries = context['ti'].xcom_pull(task_ids='get_supabase_data', key='get_initial_queries')
+    response = context['ti'].xcom_pull(task_ids='get_supabase_data', key='get_initial_response')
+
+    cleaned_queries = [clean_text_using_lemmatizer(q) for q in queries]
+    cleaned_responses = [clean_text_using_lemmatizer(r) for r in response]
+
+    print(cleaned_queries)
+    print(cleaned_responses)
+
+    context['ti'].xcom_push(key='lemmatized_user_queries', value=cleaned_queries)
+    context['ti'].xcom_push(key='lemmatized_user_responses', value=cleaned_responses)
+
+    return 'Cleaning Completed Successfully!!!'

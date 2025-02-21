@@ -3,3 +3,8 @@ scikit-learn
 kneed
 google-cloud-bigquery
 apache-airflow-providers-google
+jinja2
+nltk
+autocorrect
+dvc
+dvc_gs

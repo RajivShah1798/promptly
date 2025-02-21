@@ -1,14 +1,19 @@
 # Import necessary libraries and modules
+import logging
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from scripts.lab import load_data, data_preprocessing, build_save_model,load_model_elbow
-from scripts.bigq.bigquery_utils import get_bq_data
+from scripts.bigq.bigquery_utils import get_supabase_data
+from scripts.email_utils import send_success_email
+from scripts.data.data_utils import clean_text
 
 from airflow import configuration as conf
 
 # Enable pickle support for XCom, allowing data to be passed between tasks
 conf.set('core', 'enable_xcom_pickling', 'True')
+
+logging.basicConfig(level=logging.INFO)
 
 # Define default arguments for your DAG
 default_args = {
@@ -38,7 +43,22 @@ dag = DAG(
 
 fetch_bq_queries = PythonOperator(
     task_id="fetch_queries_task",
-    python_callable=get_bq_data,
+    python_callable=get_supabase_data,
+    provide_context = True,
+    dag=dag,
+)
+
+clean_queries = PythonOperator(
+    task_id="clean_user_queries_task",
+    python_callable=clean_text,
+    provide_context = True,
+    dag=dag,
+)
+
+send_success_email_dag = PythonOperator(
+    task_id="send_success_email",
+    python_callable=send_success_email,
+    provide_context = True,
     dag=dag,
 )
 
@@ -69,7 +89,7 @@ fetch_bq_queries = PythonOperator(
 
 # Set task dependencies
 # load_data_task >> fetch_bq_queries >> data_preprocessing_task
-fetch_bq_queries
+fetch_bq_queries >> clean_queries >> send_success_email_dag
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":
