@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from scripts.lab import load_data, data_preprocessing, build_save_model,load_model_elbow
-from scripts.bigq.bigquery_utils import get_supabase_data
+from data_pipeline.dags.scripts.supadb.supabase_utils import get_supabase_data, push_to_dvc
 from scripts.email_utils import send_success_email
 from scripts.data.data_utils import clean_text
 
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Define default arguments for your DAG
 default_args = {
-    'owner': 'Fantastic Four',
+    'owner': 'Ronak',
     'start_date': datetime(2025, 1, 15),
     'retries': 0, # Number of retries in case of task failure
     'retry_delay': timedelta(minutes=5), # Delay before retries
@@ -27,7 +27,7 @@ default_args = {
 dag = DAG(
     'Train_User_Queries',
     default_args=default_args,
-    description='Dag example for Lab 1 of Airflow series',
+    description='Dag for processing User Queries stored in Supabase for Model Training',
     schedule_interval=None,  # Set the schedule interval or use None for manual triggering
     catchup=False,
 )
@@ -62,34 +62,16 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
-# Task to perform data preprocessing, depends on 'load_data_task'
-# data_preprocessing_task = PythonOperator(
-#     task_id='data_preprocessing_task',
-#     python_callable=data_preprocessing,
-#     op_args=[load_data_task.output],
-#     dag=dag,
-# )
-# Task to build and save a model, depends on 'data_preprocessing_task'
-# build_save_model_task = PythonOperator(
-#     task_id='build_save_model_task',
-#     python_callable=build_save_model,
-#     op_args=[data_preprocessing_task.output, "model.sav"],
-#     provide_context=True,
-#     dag=dag,
-# )
-# # Task to load a model using the 'load_model_elbow' function, depends on 'build_save_model_task'
-# load_model_task = PythonOperator(
-#     task_id='load_model_task',
-#     python_callable=load_model_elbow,
-#     op_args=["model.sav", build_save_model_task.output],
-#     dag=dag,
-# )
-
-
+# Push Data to DVC once Cleaned
+push_data_to_DVC = PythonOperator(
+    task_id='push_data_to_dvc',
+    python_callable=push_to_dvc,
+    provide_context = True,
+    dag=dag,
+)
 
 # Set task dependencies
-# load_data_task >> fetch_bq_queries >> data_preprocessing_task
-fetch_bq_queries >> clean_queries >> send_success_email_dag
+fetch_bq_queries >> clean_queries >> push_data_to_DVC >> send_success_email_dag
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":

@@ -13,6 +13,8 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY") # Variable.get("SUPABASE_KEY")  # Or
 # Initialize Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
+
 def get_supabase_data(**context):
     """
     Retrieves data from Supabase user_queries table.
@@ -165,17 +167,14 @@ def push_to_dvc(**context):
         raise ValueError("No data found in XCom for DVC push.")
 
     # Create DataFrame and save as CSV
-    dvc_data_path = "data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
+    dvc_data_path = base_dir + "data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
     df = pd.DataFrame({"question": user_queries, "response": user_responses})
     df.to_csv(dvc_data_path, index=False)
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
         subprocess.run(["dvc", "add", dvc_data_path], check=True)
-        # subprocess.run(["git", "add", dvc_data_path + ".dvc"], check=True)
-        # subprocess.run(["git", "commit", "-m", "Updated user queries data"], check=True)
         subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # Push to GCP Bucket
-        # subprocess.run(["git", "push"], check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"DVC push failed: {e}")
 
