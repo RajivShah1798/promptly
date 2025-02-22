@@ -90,5 +90,6 @@ def clean_text(queries):
 
     print(cleaned_queries)
     print(cleaned_responses)
+    print(cleaned_context)
 
     return [cleaned_queries, cleaned_responses, cleaned_context]

@@ -63,7 +63,7 @@ task_clean_queries = PythonOperator(
 )
 
 task_view_and_upload_data = PythonOperator(
-    task_id='print_data',
+    task_id='view_and_upload_to_GCS',
     python_callable=view_and_upload_data,
     op_args=[task_clean_queries.output],
     op_kwargs={

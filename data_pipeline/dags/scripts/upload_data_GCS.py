@@ -14,28 +14,25 @@ def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: st
     Returns:
     None
     """
-    query = data[0].get('query', '')
-    context = data[0].get('context','')
-    response = data[0].get('response','')
-    print("Query:-")
-    print(query)
-    print("-"*100)
-    print("Context:-")
-    print(context)
-    print("-"*100)
-    print("Response:-")
-    print(response)
-    print("-"*100)
-    print()
-    print("-"*100)
-    
-    # Save to a local file
     user_queries, user_response, user_context = data
+
+    for item in range(0,10):
+        print("Query:-")
+        print(user_queries[item])
+        print("-"*100)
+        print("Context:-")
+        print(user_context[item])
+        print("-"*100)
+        print("Response:-")
+        print(user_response[item])
+        print("-"*100)
+        print()
+        print("-"*100)
 
     if not user_queries or not user_response or not user_context:
         raise ValueError("Key Data not found to process the operation.")
 
-    # Create DataFrame and save as CSV
+    # Create DataFrame and Save to a local CSV file
     local_path = base_dir + "/data/preprocessed_user_data.csv" 
 
     df = pd.DataFrame({'question': user_queries, 'context': user_context, 'response': user_response})
@@ -43,7 +40,7 @@ def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: st
     df.to_csv(local_path, index=False)
     
     print("Uploading to GCS using GCSHook")
-    
+
     upload_to_gcs_using_hook(local_path, bucket_name, destination_blob_name)
 
 
