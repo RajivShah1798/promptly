@@ -160,21 +160,20 @@ def push_to_dvc(cleaned_query_results):
     Saves the updated data as a CSV file and pushes it to GCP via DVC.
     """
     # Disjunct
-    user_queries, user_response = cleaned_query_results
+    user_queries, user_response, user_context = cleaned_query_results
 
-    if not user_queries or not user_response:
-        raise ValueError("No data found in XCom for DVC push.")
-
-    # Create DataFrame and save as CSV
-    dvc_data_path = base_dir + "/data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
-    df = pd.DataFrame({'question': user_queries, 'response': user_response})
-    df.to_csv(dvc_data_path, index=False)
+    if not user_queries or not user_response or not user_context:
+        raise ValueError("Key Data not found for DVC push.")
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
-        subprocess.run(["dvc", "add", dvc_data_path], check=True)
-        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # Push to GCP Bucket
+        subprocess.run(["dvc", "add", base_dir + "/data/preprocessed_user_data.csv"], check=True)
+
+        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
+
+        # Delete data.json.dvc
+        os.remove(base_dir + "/data/preprocessed_user_data.csv" + ".dvc")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"DVC push failed: {e}")
 
-    return "DVC Push to GCS Succeeded!"
+    return "DVC Push to Succeeded!"

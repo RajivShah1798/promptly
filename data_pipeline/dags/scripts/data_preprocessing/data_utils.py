@@ -7,11 +7,6 @@ from nltk.stem import WordNetLemmatizer
 from autocorrect import Speller
 from airflow.operators.python import get_current_context
 
-# Download necessary NLTK resources
-# nltk.download('punkt')
-# # nltk.download('stopwords')
-# nltk.download('wordnet')
-
 # Initialize components
 lemmatizer = WordNetLemmatizer()
 spell = Speller(lang='en')
@@ -83,16 +78,6 @@ def clean_response(response):
     return response
 
 
-def check_xcom_data(ti):
-    context = get_current_context()
-
-    queries = context['ti'].xcom_pull(task_ids='get_supabase_data', key='get_initial_queries')
-    quer2 = ti.xcom_pull(task_ids='get_supabase_data', key='get_initial_queries')
-
-    print("XCom Data 222:", queries)
-    print("XCom DDD:", quer2)
-
-
 def clean_text(queries):
     """Clean and standardize text."""
 
@@ -101,11 +86,9 @@ def clean_text(queries):
 
     cleaned_queries = [clean_text_using_lemmatizer(q['query']) for q in queries]
     cleaned_responses = [clean_text_using_lemmatizer(r['response']) for r in queries]
+    cleaned_context = [clean_text_using_lemmatizer(c['context']) for c in queries]
 
     print(cleaned_queries)
     print(cleaned_responses)
 
-    # context['ti'].xcom_push(key='lemmatized_user_queries', value=cleaned_queries)
-    # context['ti'].xcom_push(key='lemmatized_user_responses', value=cleaned_responses)
-
-    return [cleaned_queries, cleaned_responses]
+    return [cleaned_queries, cleaned_responses, cleaned_context]
