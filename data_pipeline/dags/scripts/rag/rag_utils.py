@@ -2,12 +2,13 @@ import os
 import logging
 import pymupdf4llm
 from datetime import datetime
+import nomic
 from nomic import embed
 from supabase import create_client
 from semantic_text_splitter import MarkdownSplitter
 from tokenizers import Tokenizer
 import sys
-import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 import config
 
@@ -84,6 +85,10 @@ def embed_and_store_chunks(chunked_data):
     """
     Generates embeddings for document chunks and stores them in Supabase.
     """
+    nomic.login(token=config.NOMIC_API_KEY)
+
+    chunks_store = []
+
     for filename, chunks in chunked_data.items():
         try:
             output = embed.text(
@@ -125,10 +130,11 @@ def embed_and_store_chunks(chunked_data):
 
             chunk_response = supabase.table(config.CHUNKS_TABLE).insert(chunk_data).execute()
             if chunk_response.data:
+                chunks_store.append(chunk_response.data)
                 logging.info(f"Inserted document {filename} and its chunks into Supabase.")
             else:
                 logging.error(f"Error inserting chunks for {filename}: {chunk_response}")
         else:
             logging.error(f"Error inserting document {filename}: {response}")
 
-    return "Embedding & Storage Completed"
+    return chunks_store

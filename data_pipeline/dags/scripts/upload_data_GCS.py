@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from itertools import chain
 
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")) # at Root 
 
@@ -63,3 +64,42 @@ def upload_to_gcs_using_hook(local_path: str, bucket_name: str, destination_blob
     gcs_hook.upload(bucket_name, destination_blob_name, local_path)
     
     print(f"File {local_path} uploaded to {destination_blob_name} in bucket {bucket_name}.")
+
+
+def upload_docs_data_to_gcs(chunk_store: list, bucket_name: str, destination_blob_name: str) -> None:
+    """
+    Processes nested chunked data and uploads it to GCS.
+
+    Args:
+        chunk_store (list): List of lists of dictionaries containing chunk metadata.
+        bucket_name (str): Name of the GCS bucket.
+        destination_blob_name (str): Destination path in the GCS bucket.
+
+    Returns:
+        None
+    """
+    # Flatten the chunk_store (list of lists → list of dictionaries)
+    flat_chunk_store = list(chain.from_iterable(chunk_store))
+
+    # Preview first 10 chunks
+    print("Previewing first 10 chunks:")
+    for item in flat_chunk_store[:10]:
+        print(f"Document ID: {item['document_id']}")
+        print(f"Chunk Content: {item['chunk_content']}")
+        print(f"Embedding: {item['embedding'][:5]}...")  # Print first 5 elements of the embedding for brevity
+        print(f"Section Order: {item['section_order']}")
+        print(f"Created At: {item['created_at']}")
+        print("------" * 10)
+
+    local_path = os.path.join(base_dir, "/data/preprocessed_docs_chunk_data.csv")
+
+    # Create DataFrame from chunk_store
+    df = pd.DataFrame(flat_chunk_store)
+
+    # Save DataFrame to CSV
+    df.to_csv(local_path, index=False)
+    print(f"Data saved to {local_path}")
+
+    # Upload to GCS
+    print("Uploading to GCS using GCSHook...")
+    upload_to_gcs_using_hook(local_path, bucket_name, destination_blob_name)

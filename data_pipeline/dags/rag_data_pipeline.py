@@ -3,8 +3,10 @@ import os
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
-from scripts.data_utils import get_documents_from_folder, read_document, check_for_pii, redact_pii, chunk_text, embed_and_store_chunks
+from scripts.rag.rag_utils import get_documents_from_folder, read_document, check_for_pii, redact_pii, chunk_text, embed_and_store_chunks
 from airflow import configuration as conf
+from scripts.rag.validate_schema import validate_rag_schema
+from scripts.upload_data_GCS import upload_docs_data_to_gcs
 
 conf.set('core', 'enable_xcom_pickling', 'True')
 
@@ -76,6 +78,15 @@ chunk_text_task = PythonOperator(
     dag=dag,
 )
 
+# Validate Schema
+task_validate_schema = PythonOperator(
+    task_id='validate_schema',
+    python_callable=validate_rag_schema,
+    op_args=[chunk_text_task.output],
+    provide_context=True,
+    dag=dag,
+)
+
 # Embed text and store in Supabase
 embed_and_store_task = PythonOperator(
     task_id="embed_and_store_chunks",
@@ -85,8 +96,27 @@ embed_and_store_task = PythonOperator(
     dag=dag,
 )
 
+task_upload_processed_data_to_GCS = PythonOperator(
+    task_id='view_and_upload_to_GCS',
+    python_callable=upload_docs_data_to_gcs,
+    op_args=[embed_and_store_task.output],
+    op_kwargs={
+        'bucket_name': 'promptly-chat',
+        'destination_blob_name': 'training_documents/preprocessed_docs_chunk_data.csv'
+    },
+    provide_context=True,
+    dag=dag,
+)
+
+# send_success_email_dag = PythonOperator(
+#     task_id="send_success_email",
+#     python_callable=send_success_email,
+#     provide_context = True,
+#     dag=dag,
+# )
+
 # Define task dependencies
-fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> embed_and_store_task
+fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task >> task_upload_processed_data_to_GCS
 
 # Run DAG from CLI
 if __name__ == "__main__":
