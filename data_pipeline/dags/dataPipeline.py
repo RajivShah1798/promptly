@@ -47,14 +47,6 @@ fetch_user_queries = PythonOperator(
     dag=dag,
 )
 
-# check_xcom_data_task = PythonOperator(
-#     task_id="check_xcom_data_task",
-#     python_callable=check_xcom_data,
-#     op_args=[data_preprocessing_task.output, "model.sav"],
-#     provide_context = True,
-#     dag=dag,
-# )
-
 clean_queries = PythonOperator(
     task_id="clean_user_queries_task",
     python_callable=clean_text,
