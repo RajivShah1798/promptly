@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")) # at Root 
 
 def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: str, **kwargs) -> None:
     """
