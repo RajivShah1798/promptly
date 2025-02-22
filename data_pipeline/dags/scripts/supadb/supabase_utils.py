@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 import pandas as pd
-# from airflow.models import Variable
+
 from supabase import create_client
 from airflow.models import Variable
 from dotenv import load_dotenv
@@ -20,27 +20,22 @@ def get_supabase_data():
     """
     Retrieves data from Supabase user_queries table.
     """
-    context = get_current_context()
+    try: 
+        # Initialize Supabase client
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    # Initialize Supabase client
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        response = supabase.table("conversations").select("*").execute()
 
-    response = supabase.table("conversations").select("*").execute()
+        if response.data is None:
+            return "stop_task"
+            raise ValueError("No data returned from Supabase.")
 
-    if response.data is None:
-        return "stop_task"
-        raise ValueError("No data returned from Supabase.")
+        query_results = response.data  # List of dicts
 
-    query_results = response.data  # List of dicts
+        print(query_results)
 
-    print(query_results)
-
-    # Extract questions and responses
-    # user_queries = [row["query"] for row in query_results]
-    # user_responses = [row["response"] for row in query_results]
-
-    # Push to XCom for other tasks
-    context['ti'].xcom_push(key='get_initial_queries', value=query_results)
+    except Exception as e:
+        raise RuntimeError("Failed to load user data from Supabase.") from e
 
     return query_results
 

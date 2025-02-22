@@ -5,7 +5,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 from scripts.supadb.supabase_utils import get_supabase_data, push_to_dvc
-from scripts.email_utils import send_success_email
+from scripts.email_utils import send_success_email, send_failure_email
 from scripts.data_preprocessing.data_utils import clean_text
 from scripts.data_preprocessing.validate_schema import validate_schema
 from airflow import configuration as conf
@@ -36,14 +36,6 @@ dag = DAG(
 )
 
 # Define PythonOperators for each function
-
-# Task to load data, calls the 'load_data' Python function
-# load_data_task = PythonOperator(
-#     task_id='load_data_task',
-#     python_callable=load_data,
-#     dag=dag,
-# )
-
 fetch_user_queries = PythonOperator(
     task_id="fetch_queries_task",
     python_callable=get_supabase_data,
