@@ -5,3 +5,4 @@ data_pipeline/dags/**/__pycache__/
 .cache/
 keys/
 *.DS_Store
+*.env

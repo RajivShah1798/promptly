@@ -1,0 +1,4 @@
+['remote "gcs_remote"']
+    url = gs://promptly-chat
+    credentialpath = ../keys/adroit-chemist-450622-c4-824fc34978e0.json
+    projectname = adroit-chemist-450622-c4

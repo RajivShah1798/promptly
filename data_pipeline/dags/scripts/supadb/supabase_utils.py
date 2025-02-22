@@ -1,41 +1,43 @@
 import logging
-from google.cloud import bigquery
 import os
-# from airflow.models import Variable
-from scripts.data.data_utils import remove_punctuation
-# from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-#     GCSToBigQueryOperator
-# )
-# from scripts.llm_utils import generate_sample_queries
-# from scripts.constants import TARGET_SAMPLE_COUNT
-# from airflow.models import DagRun
+import subprocess
+import pandas as pd
 
-def get_bq_data():
-    """
-    Retrieves data from bigquery
-    """
-    # sample_count = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
-    # if sample_count == "stop_task":
-    #     return "stop_task"
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/ronak/Documents/Spring24/MLOps/promptly/keys/adroit-chemist-450622-c4-824fc34978e0.json"
+from supabase import create_client
+from airflow.models import Variable
+from dotenv import load_dotenv
+from airflow.operators.python import get_current_context
 
-    client = bigquery.Client()
-    project_id = "adroit-chemist-450622-c4"
-    
-    dataset_id = "promptly_queries"
-    table_id = "user_queries"
-    
-    query = f"""
-        SELECT * FROM `{client.project}.{dataset_id}.{table_id}`
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
+# Load environment variables from .env file.
+load_dotenv(base_dir + "/.env")
+
+# Load Supabase credentials (replace with Airflow Variable or environment variable)
+SUPABASE_URL = os.getenv("SUPABASE_URL") # Variable.get("SUPABASE_URL")  # Or
+SUPABASE_KEY = os.getenv("SUPABASE_KEY") # Variable.get("SUPABASE_KEY")  # Or 
+
+def get_supabase_data():
     """
-    
-    query_job = client.query(query)
-    results = query_job.result()
-    
-    for row in results:
-        print(row)
-    
-    return "Succeeded!"
+    Retrieves data from Supabase user_queries table.
+    """
+    try: 
+        # Initialize Supabase client
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+        response = supabase.table("conversations").select("*").execute()
+
+        if response.data is None:
+            return "stop_task"
+            raise ValueError("No data returned from Supabase.")
+
+        query_results = response.data  # List of dicts
+
+        print(query_results)
+
+    except Exception as e:
+        raise RuntimeError("Failed to load user data from Supabase.") from e
+
+    return query_results
 
 '''
 def perform_similarity_search(**context):
@@ -153,35 +155,25 @@ def perform_similarity_search(**context):
     return "generate_samples"
 '''
 
-def upload_gcs_to_bq(**context):
+def push_to_dvc(cleaned_query_results):
     """
-    Uploads the generated sample data from GCS to BigQuery.
-
-    This task will only run if the "check_sample_count" task does not return "stop_task".
-    Otherwise, this task will return "stop_task" without performing any actions.
-
-    The sample data is loaded from the 'processed_trace_data' folder in the default GCS bucket.
-    The data is uploaded to the table specified in the 'train_data_table_name' variable.
-
-    :param context: Airflow context object
-    :return: "generate_samples" if successful, "stop_task" if not
+    Saves the updated data as a CSV file and pushes it to GCP via DVC.
     """
-    task_status = context['ti'].xcom_pull(task_ids='check_sample_count', key='task_status')
-    
-    if task_status == "stop_task":
-        return "stop_task"
+    # Disjunct
+    user_queries, user_response, user_context = cleaned_query_results
 
-    load_to_bigquery = GCSToBigQueryOperator(
-        task_id='load_to_bigquery',
-        bucket=Variable.get('default_bucket_name'),
-        source_objects=['processed_trace_data/llm_train_data.pq'],
-        destination_project_dataset_table=Variable.get('train_data_table_name'),
-        write_disposition='WRITE_APPEND',
-        autodetect=True,
-        skip_leading_rows=1,
-        dag=context['dag'],
-        source_format='PARQUET', 
-    )
+    if not user_queries or not user_response or not user_context:
+        raise ValueError("Key Data not found for DVC push.")
 
-    load_to_bigquery.execute(context=context)
-    return "generate_samples"
+    try:
+        # DVC Add, Commit, and Push to GCP Bucket
+        subprocess.run(["dvc", "add", base_dir + "/data/preprocessed_user_data.csv"], check=True)
+
+        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
+
+        # Delete data.json.dvc
+        os.remove(base_dir + "/data/preprocessed_user_data.csv" + ".dvc")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"DVC push failed: {e}")
+
+    return "DVC Push to Succeeded!"
