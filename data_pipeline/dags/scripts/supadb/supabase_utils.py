@@ -5,37 +5,44 @@ import pandas as pd
 # from airflow.models import Variable
 from supabase import create_client
 from airflow.models import Variable
+from dotenv import load_dotenv
+from airflow.operators.python import get_current_context
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
+# Load environment variables from .env file.
+load_dotenv(base_dir + "/.env")
 
 # Load Supabase credentials (replace with Airflow Variable or environment variable)
 SUPABASE_URL = os.getenv("SUPABASE_URL") # Variable.get("SUPABASE_URL")  # Or
 SUPABASE_KEY = os.getenv("SUPABASE_KEY") # Variable.get("SUPABASE_KEY")  # Or 
 
-# Initialize Supabase client
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-def get_supabase_data(**context):
+def get_supabase_data():
     """
     Retrieves data from Supabase user_queries table.
     """
-    response = supabase.table("user_queries").select("*").execute()
+    context = get_current_context()
+
+    # Initialize Supabase client
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+    response = supabase.table("conversations").select("*").execute()
 
     if response.data is None:
+        return "stop_task"
         raise ValueError("No data returned from Supabase.")
 
     query_results = response.data  # List of dicts
 
-    # Extract questions and responses
-    user_queries = [row["question"] for row in query_results]
-    user_responses = [row["response"] for row in query_results]
+    print(query_results)
 
-    print("User Queries:", user_queries)
-    print("User Responses:", user_responses)
+    # Extract questions and responses
+    # user_queries = [row["query"] for row in query_results]
+    # user_responses = [row["response"] for row in query_results]
 
     # Push to XCom for other tasks
-    context['ti'].xcom_push(key='get_initial_queries', value=user_queries)
-    context['ti'].xcom_push(key='get_initial_response', value=user_responses)
+    context['ti'].xcom_push(key='get_initial_queries', value=query_results)
 
-    return "Succeeded!"
+    return query_results
 
 '''
 def perform_similarity_search(**context):
@@ -153,29 +160,25 @@ def perform_similarity_search(**context):
     return "generate_samples"
 '''
 
-def push_to_dvc(**context):
+def push_to_dvc(cleaned_query_results):
     """
     Saves the updated data as a CSV file and pushes it to GCP via DVC.
     """
-    # Retrieve data from XCom
-    user_queries = context['ti'].xcom_pull(task_ids="get_supabase_data", key="get_initial_queries")
-    user_responses = context['ti'].xcom_pull(task_ids="get_supabase_data", key="get_initial_response")
+    # Disjunct
+    user_queries, user_response = cleaned_query_results
 
-    if not user_queries or not user_responses:
+    if not user_queries or not user_response:
         raise ValueError("No data found in XCom for DVC push.")
 
     # Create DataFrame and save as CSV
-    dvc_data_path = "data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
-    df = pd.DataFrame({"question": user_queries, "response": user_responses})
+    dvc_data_path = base_dir + "/data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
+    df = pd.DataFrame({'question': user_queries, 'response': user_response})
     df.to_csv(dvc_data_path, index=False)
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
         subprocess.run(["dvc", "add", dvc_data_path], check=True)
-        # subprocess.run(["git", "add", dvc_data_path + ".dvc"], check=True)
-        # subprocess.run(["git", "commit", "-m", "Updated user queries data"], check=True)
         subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # Push to GCP Bucket
-        # subprocess.run(["git", "push"], check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"DVC push failed: {e}")
 
