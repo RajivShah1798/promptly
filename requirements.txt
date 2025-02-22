@@ -3,6 +3,8 @@ scikit-learn
 kneed
 google-cloud-bigquery
 apache-airflow-providers-google
+presidio_analyzer
+presidio_anonymizer
 jinja2
 nltk
 autocorrect
