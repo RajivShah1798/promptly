@@ -1,13 +1,17 @@
 # Import necessary libraries and modules
 import logging
+
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
+from airflow.utils.dates import days_ago
+from airflow import configuration as conf
+
 from datetime import datetime, timedelta
 from scripts.supadb.supabase_utils import get_supabase_data, push_to_dvc
-from scripts.email_utils import send_success_email
-from scripts.data.data_utils import clean_text, check_xcom_data
-
-from airflow import configuration as conf
+from scripts.email_utils import send_success_email, send_failure_email
+from scripts.data_preprocessing.data_utils import clean_text
+from scripts.data_preprocessing.validate_schema import validate_schema
+from scripts.upload_data_GCS import view_and_upload_data
 
 # Enable pickle support for XCom, allowing data to be passed between tasks
 conf.set('core', 'enable_xcom_pickling', 'True')
@@ -17,7 +21,10 @@ logging.basicConfig(level=logging.INFO)
 # Define default arguments for your DAG
 default_args = {
     'owner': 'Ronak',
-    'start_date': datetime(2025, 1, 15),
+    'start_date': days_ago(1),
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
     'retries': 0, # Number of retries in case of task failure
     'retry_delay': timedelta(minutes=5), # Delay before retries
 }
@@ -32,14 +39,6 @@ dag = DAG(
 )
 
 # Define PythonOperators for each function
-
-# Task to load data, calls the 'load_data' Python function
-# load_data_task = PythonOperator(
-#     task_id='load_data_task',
-#     python_callable=load_data,
-#     dag=dag,
-# )
-
 fetch_user_queries = PythonOperator(
     task_id="fetch_queries_task",
     python_callable=get_supabase_data,
@@ -47,10 +46,39 @@ fetch_user_queries = PythonOperator(
     dag=dag,
 )
 
-clean_queries = PythonOperator(
+task_validate_schema = PythonOperator(
+    task_id='validate_schema',
+    python_callable=validate_schema,
+    op_args=[fetch_user_queries.output],
+    provide_context=True,
+    dag=dag,
+)
+
+task_clean_queries = PythonOperator(
     task_id="clean_user_queries_task",
     python_callable=clean_text,
     op_args=[fetch_user_queries.output],
+    provide_context = True,
+    dag=dag,
+)
+
+task_view_and_upload_data = PythonOperator(
+    task_id='view_and_upload_to_GCS',
+    python_callable=view_and_upload_data,
+    op_args=[task_clean_queries.output],
+    op_kwargs={
+        'bucket_name': 'promptly-chat',
+        'destination_blob_name': 'data/preprocessed_user_data.csv'
+    },
+    provide_context=True,
+    dag=dag,
+)
+
+# Push Data to DVC once Cleaned
+push_data_to_DVC = PythonOperator(
+    task_id='push_data_to_dvc',
+    python_callable=push_to_dvc,
+    op_args=[task_clean_queries.output],
     provide_context = True,
     dag=dag,
 )
@@ -62,17 +90,14 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
-# Push Data to DVC once Cleaned
-push_data_to_DVC = PythonOperator(
-    task_id='push_data_to_dvc',
-    python_callable=push_to_dvc,
-    op_args=[clean_queries.output],
-    provide_context = True,
-    dag=dag,
-)
-
 # Set task dependencies
-fetch_user_queries >> clean_queries >> push_data_to_DVC >> send_success_email_dag
+fetch_user_queries >> task_validate_schema
+task_validate_schema >> task_clean_queries
+task_clean_queries >> task_view_and_upload_data 
+task_view_and_upload_data >> push_data_to_DVC >> send_success_email_dag
+
+# Set up the failure callback
+# dag.on_failure_callback = handle_failure
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":

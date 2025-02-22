@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 import pandas as pd
-# from airflow.models import Variable
+
 from supabase import create_client
 from airflow.models import Variable
 from dotenv import load_dotenv
@@ -20,27 +20,22 @@ def get_supabase_data():
     """
     Retrieves data from Supabase user_queries table.
     """
-    context = get_current_context()
+    try: 
+        # Initialize Supabase client
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    # Initialize Supabase client
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        response = supabase.table("conversations").select("*").execute()
 
-    response = supabase.table("conversations").select("*").execute()
+        if response.data is None:
+            return "stop_task"
+            raise ValueError("No data returned from Supabase.")
 
-    if response.data is None:
-        return "stop_task"
-        raise ValueError("No data returned from Supabase.")
+        query_results = response.data  # List of dicts
 
-    query_results = response.data  # List of dicts
+        print(query_results)
 
-    print(query_results)
-
-    # Extract questions and responses
-    # user_queries = [row["query"] for row in query_results]
-    # user_responses = [row["response"] for row in query_results]
-
-    # Push to XCom for other tasks
-    context['ti'].xcom_push(key='get_initial_queries', value=query_results)
+    except Exception as e:
+        raise RuntimeError("Failed to load user data from Supabase.") from e
 
     return query_results
 
@@ -165,21 +160,20 @@ def push_to_dvc(cleaned_query_results):
     Saves the updated data as a CSV file and pushes it to GCP via DVC.
     """
     # Disjunct
-    user_queries, user_response = cleaned_query_results
+    user_queries, user_response, user_context = cleaned_query_results
 
-    if not user_queries or not user_response:
-        raise ValueError("No data found in XCom for DVC push.")
-
-    # Create DataFrame and save as CSV
-    dvc_data_path = base_dir + "/data/user_queries.csv"  # Ensure this is inside a DVC-tracked directory
-    df = pd.DataFrame({'question': user_queries, 'response': user_response})
-    df.to_csv(dvc_data_path, index=False)
+    if not user_queries or not user_response or not user_context:
+        raise ValueError("Key Data not found for DVC push.")
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
-        subprocess.run(["dvc", "add", dvc_data_path], check=True)
-        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # Push to GCP Bucket
+        subprocess.run(["dvc", "add", base_dir + "/data/preprocessed_user_data.csv"], check=True)
+
+        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
+
+        # Delete data.json.dvc
+        os.remove(base_dir + "/data/preprocessed_user_data.csv" + ".dvc")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"DVC push failed: {e}")
 
-    return "DVC Push to GCS Succeeded!"
+    return "DVC Push to Succeeded!"
