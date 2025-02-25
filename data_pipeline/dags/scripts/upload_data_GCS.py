@@ -91,7 +91,7 @@ def upload_docs_data_to_gcs(chunk_store: list, bucket_name: str, destination_blo
         print(f"Created At: {item['created_at']}")
         print("------" * 10)
 
-    local_path = os.path.join(base_dir, "/data/preprocessed_docs_chunk_data.csv")
+    local_path = base_dir + "/data/preprocessed_docs_chunk_data.csv"
 
     # Create DataFrame from chunk_store
     df = pd.DataFrame(flat_chunk_store)
