@@ -78,7 +78,7 @@ task_view_and_upload_data = PythonOperator(
 push_data_to_DVC = PythonOperator(
     task_id='push_data_to_dvc',
     python_callable=push_to_dvc,
-    op_args=[task_clean_queries.output],
+    op_args=[task_clean_queries.output, "/data/preprocessed_user_data.csv"],
     provide_context = True,
     dag=dag,
 )
@@ -91,10 +91,9 @@ send_success_email_dag = PythonOperator(
 )
 
 # Set task dependencies
-fetch_user_queries >> task_validate_schema
-task_validate_schema >> task_clean_queries
-task_clean_queries >> task_view_and_upload_data 
-task_view_and_upload_data >> push_data_to_DVC >> send_success_email_dag
+fetch_user_queries >> task_validate_schema >> task_clean_queries >> task_view_and_upload_data 
+task_clean_queries >> push_data_to_DVC 
+task_clean_queries >> send_success_email_dag
 
 # Set up the failure callback
 # dag.on_failure_callback = handle_failure
