@@ -5,6 +5,20 @@ from jinja2 import Template
 from email.mime.multipart import MIMEMultipart
 
 def send_success_email(**kwargs):
+    """
+    Sends a success notification email to a predefined list of recipients when an Airflow DAG completes successfully.
+
+    Args:
+        **kwargs: Arbitrary keyword arguments containing Airflow context, including:
+            - dag: The DAG object associated with the successful execution.
+            - task: The task object associated with the successful execution.
+
+    Environment Variables:
+        EMAIL_USER: The sender's email address.
+        EMAIL_PASSWORD: The password for the sender's email account.
+
+    Sends an email to the recipients with the DAG and task details upon successful execution.
+    """
     sender_email = Variable.get('EMAIL_USER')
     password = Variable.get('EMAIL_PASSWORD')
     receiver_emails = ["vadhaiya.r@northeastern.edu", "bilwal.sagar@northeastern.edu", "kushalshankar03@gmail.com", "shah.rajiv1702@gmail.com"]
@@ -51,6 +65,19 @@ def send_success_email(**kwargs):
 
 
 def send_failure_email(task_instance, exception):
+    """
+    Sends a failure notification email to a predefined recipient when an Airflow task fails.
+
+    Args:
+        task_instance (TaskInstance): The Airflow TaskInstance object representing the failed task.
+        exception (Exception): The exception raised during task execution.
+
+    Environment Variables:
+        EMAIL_USER: The sender's email address.
+        EMAIL_PASSWORD: The password for the sender's email account.
+
+    Sends an email containing the DAG ID, task ID, and exception details to the specified recipient.
+    """
     sender_email = Variable.get('EMAIL_USER')
     receiver_email = "vadhaiya.r@northeastern.edu"
     password = Variable.get('EMAIL_PASSWORD')

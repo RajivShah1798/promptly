@@ -68,7 +68,7 @@ def upload_to_gcs_using_hook(local_path: str, bucket_name: str, destination_blob
 
 def upload_docs_data_to_gcs(chunk_store: list, bucket_name: str, destination_blob_name: str) -> None:
     """
-    Processes nested chunked data and uploads it to GCS.
+    View nested chunked data and uploads it to GCS.
 
     Args:
         chunk_store (list): List of lists of dictionaries containing chunk metadata.

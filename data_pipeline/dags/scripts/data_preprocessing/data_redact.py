@@ -19,6 +19,9 @@ following:
 from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer, RecognizerResult
 from presidio_anonymizer import AnonymizerEngine
 from typing import List, Dict, Tuple
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class CorporateDataRecognizer(PatternRecognizer):
@@ -70,8 +73,76 @@ class PIIHandler:
         redacted_text = self.anonymizer.anonymize(text, analyzer_results=detected_pii)
         
         return redacted_text.text
+
+
+def check_for_pii(documents):
+    """
+    Detects PII in multiple documents.
+
+    Args:
+        documents (list of dict): Each dictionary contains 'filename' and 'text'.
+
+    Returns:
+        list of dict: Each dictionary contains 'filename', 'text', and 'pii_results'.
+    """
+    pii_handler = PIIHandler()
+    processed_documents = []
+
+    for doc in documents:
+        filename = doc.get('filename')
+        text = doc.get('text')
+        
+        # Detect PII in the text
+        pii_data, results = pii_handler.detect_pii(text)
+
+        print('filename', filename)
+        print('text', text)
+        print('pii_results', results)
+        print('pii_detected', pii_data)
+        
+        processed_documents.append({
+            'filename': filename,
+            'text': text,
+            'pii_results': results, 
+            'pii_detected': pii_data
+        })
     
+    logging.info("Checked for PII. Documents along with their PII Results are available")
+    return processed_documents
+
+
+def redact_pii(documents_with_pii):
+    """
+    Redacts PII in multiple documents.
+
+    Args:
+        documents_with_pii (list of dict): Each dictionary contains 'filename', 'text', and 'pii_results'.
+
+    Returns:
+        list of dict: Each dictionary contains 'filename' and 'redacted_text'.
+    """
+    pii_handler = PIIHandler()
+    redacted_documents = []
+
+    for doc in documents_with_pii:
+        filename = doc.get('filename')
+        text = doc.get('text')
+        pii_results = doc.get('pii_results')
+        
+        # Redact PII in the text
+        redacted_text = pii_handler.redact_pii(text, pii_results)
+
+        print('filename', filename)
+        print('Redacted text', redacted_text)
+        
+        redacted_documents.append({
+            'filename': filename,
+            'redacted_text': redacted_text
+        })
     
+    logging.info("PII redaction step executed. All Documents are be PII complaint now ")
+    return redacted_documents
+
 if __name__=='__main__':
     document_text = "John Doe's salary is $120,000. API key: sk_live_123456789abcdefghij."
     pii_handler = PIIHandler()
