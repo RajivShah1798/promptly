@@ -8,12 +8,12 @@ from airflow.models import Variable
 from dotenv import load_dotenv
 from airflow.operators.python import get_current_context
 
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
-# # Load environment variables from .env file.
-# load_dotenv(base_dir + "/.env")
+import sys
 
-# Load Supabase credentials
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 import config
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")) # at Root 
 
 def get_supabase_data():
     """

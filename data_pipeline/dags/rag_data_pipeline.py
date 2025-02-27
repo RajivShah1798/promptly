@@ -3,7 +3,8 @@ import os
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
-from scripts.rag.rag_utils import get_documents_from_folder, read_document, check_for_pii, redact_pii, chunk_text, embed_and_store_chunks
+from scripts.rag.rag_utils import get_documents_from_folder, read_document, chunk_text, embed_and_store_chunks
+from scripts.data_preprocessing.check_pii_data import check_for_pii, redact_pii
 from airflow import configuration as conf
 from scripts.rag.validate_schema import validate_rag_schema
 from scripts.upload_data_GCS import upload_docs_data_to_gcs
@@ -64,7 +65,7 @@ check_pii_task = PythonOperator(
 redact_pii_task = PythonOperator(
     task_id="redact_pii",
     python_callable=redact_pii,
-    op_args=[read_documents_task.output, check_pii_task.output],
+    op_args=[check_pii_task.output],
     provide_context=True,
     dag=dag,
 )

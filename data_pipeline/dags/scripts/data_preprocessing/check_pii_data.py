@@ -88,9 +88,9 @@ def check_for_pii(documents):
     pii_handler = PIIHandler()
     processed_documents = []
 
-    for doc in documents:
-        filename = doc.get('filename')
-        text = doc.get('text')
+    for filename, text in documents.items():
+        # filename = doc.get('filename')
+        # text = doc.get('text')
         
         # Detect PII in the text
         pii_data, results = pii_handler.detect_pii(text)
@@ -135,9 +135,12 @@ def redact_pii(documents_with_pii):
         print('filename', filename)
         print('Redacted text', redacted_text)
         
+        # redacted_documents.append({
+        #     'filename': filename,
+        #     'redacted_text': redacted_text
+        # })
         redacted_documents.append({
-            'filename': filename,
-            'redacted_text': redacted_text
+            filename: redacted_text
         })
     
     logging.info("PII redaction step executed. All Documents are be PII complaint now ")
