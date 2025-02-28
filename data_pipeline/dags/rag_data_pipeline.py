@@ -103,6 +103,7 @@ embed_and_store_task = PythonOperator(
     dag=dag,
 )
 
+# Upload to GCS
 task_upload_processed_data_to_GCS = PythonOperator(
     task_id='view_and_upload_to_GCS',
     python_callable=upload_docs_data_to_gcs,
@@ -115,7 +116,7 @@ task_upload_processed_data_to_GCS = PythonOperator(
     dag=dag,
 )
 
-# Push Data to DVC once Cleaned
+# Push Data to DVC once ready
 push_data_to_DVC = PythonOperator(
     task_id='push_data_to_dvc',
     python_callable=push_to_dvc,
@@ -124,6 +125,7 @@ push_data_to_DVC = PythonOperator(
     dag=dag,
 )
 
+# Send success email on completion
 send_success_email_dag = PythonOperator(
     task_id="send_success_email",
     python_callable=send_success_email,
@@ -132,7 +134,10 @@ send_success_email_dag = PythonOperator(
 )
 
 # Define task dependencies
-fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task >> task_upload_processed_data_to_GCS
+fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task
+embed_and_store_task >> task_upload_processed_data_to_GCS
+embed_and_store_task >> push_data_to_DVC 
+push_data_to_DVC >> send_success_email_dag
 
 # Run DAG from CLI
 if __name__ == "__main__":
