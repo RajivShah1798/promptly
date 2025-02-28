@@ -51,22 +51,6 @@ def read_document(document_paths):
     logging.info(f"Read {len(document_contents)} documents.")
     return document_contents  # Returns a dictionary {filename: text_content}
 
-# def check_for_pii(document_contents):
-#     """
-#     Placeholder function: Scans text for PII.
-#     Returns a dictionary with boolean values indicating whether PII was detected.
-#     """
-#     pii_flags = {filename: False for filename in document_contents}  # Dummy implementation
-#     logging.info("Checked for PII. (Functionality to be implemented)")
-#     return pii_flags  # Returns {filename: True/False}
-
-# def redact_pii(document_contents, pii_flags):
-#     """
-#     Placeholder function: Redacts PII if detected.
-#     """
-#     redacted_contents = document_contents.copy()
-#     logging.info("PII redaction step executed. (Functionality to be implemented)")
-#     return redacted_contents
 
 def chunk_text(document_contents):
     """
