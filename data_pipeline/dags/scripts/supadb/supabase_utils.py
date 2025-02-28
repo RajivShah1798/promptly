@@ -39,15 +39,16 @@ def get_supabase_data():
     return query_results
 
 
-def push_to_dvc(cleaned_query_results, file_path):
+def push_to_dvc(cleaned_query_results, file_path, RAG_docs=False):
     """
     Saves the updated data as a CSV file and pushes it to DVC.
     """
     # Disjunct
-    user_queries, user_response, user_context = cleaned_query_results
+    if not RAG_docs:
+        user_queries, user_response, user_context = cleaned_query_results
 
-    if not user_queries or not user_response or not user_context:
-        raise ValueError("Key Data not found for DVC push.")
+        if not user_queries or not user_response or not user_context:
+            raise ValueError("Key Data not found for DVC push.")
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket

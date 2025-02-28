@@ -29,6 +29,18 @@ default_args = {
     'retry_delay': timedelta(minutes=5), # Delay before retries
 }
 
+# Function to handle failur
+def handle_failure(context):
+    task_instance = context['task_instance']
+    exception = task_instance.exception
+    # Log or handle the exception as needed
+    print(f"Task {task_instance.task_id} failed with exception: {exception}")
+    try:
+        send_failure_email(task_instance, exception)
+        print("Failure email sent successfully!")
+    except Exception as e:
+        print(f"Error sending failure email: {e}")
+
 # Create a DAG instance named 'Airflow_Lab1' with the defined default arguments
 dag = DAG(
     'Train_User_Queries',
@@ -90,13 +102,13 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
-# Set task dependencies
+# Set task dependencies and Optimise Flow
 fetch_user_queries >> task_validate_schema >> task_clean_queries >> task_view_and_upload_data 
 task_clean_queries >> push_data_to_DVC 
 task_clean_queries >> send_success_email_dag
 
 # Set up the failure callback
-# dag.on_failure_callback = handle_failure
+dag.on_failure_callback = handle_failure
 
 # If this script is run directly, allow command-line interaction with the DAG
 if __name__ == "__main__":

@@ -1,8 +1,11 @@
 import logging
 import os
+from airflow.utils.dates import days_ago
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
+from scripts.email_utils import send_success_email
+from scripts.supadb.supabase_utils import push_to_dvc
 from scripts.rag.rag_utils import get_documents_from_folder, read_document, chunk_text, embed_and_store_chunks
 from scripts.data_preprocessing.check_pii_data import check_for_pii, redact_pii
 from airflow import configuration as conf
@@ -16,9 +19,12 @@ logging.basicConfig(level=logging.INFO)
 # Define default arguments for the DAG
 default_args = {
     'owner': 'Sagar',
-    'start_date': datetime(2025, 1, 15),
-    'retries': 0,
-    'retry_delay': timedelta(minutes=5),
+    'start_date': days_ago(1),
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 0, # Number of retries in case of task failure
+    'retry_delay': timedelta(minutes=5), # Delay before retries
 }
 
 # Define the DAG
@@ -109,12 +115,21 @@ task_upload_processed_data_to_GCS = PythonOperator(
     dag=dag,
 )
 
-# send_success_email_dag = PythonOperator(
-#     task_id="send_success_email",
-#     python_callable=send_success_email,
-#     provide_context = True,
-#     dag=dag,
-# )
+# Push Data to DVC once Cleaned
+push_data_to_DVC = PythonOperator(
+    task_id='push_data_to_dvc',
+    python_callable=push_to_dvc,
+    op_args=[embed_and_store_task.output, "/data/preprocessed_docs_chunks.csv", True],
+    provide_context = True,
+    dag=dag,
+)
+
+send_success_email_dag = PythonOperator(
+    task_id="send_success_email",
+    python_callable=send_success_email,
+    provide_context = True,
+    dag=dag,
+)
 
 # Define task dependencies
 fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task >> task_upload_processed_data_to_GCS
