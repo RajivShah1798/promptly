@@ -1,6 +1,5 @@
 pandas
 scikit-learn
-kneed
 google-cloud-bigquery
 apache-airflow-providers-google
 presidio_analyzer
@@ -12,3 +11,7 @@ dvc
 dvc_gs
 supabase
 python-dotenv
+pymupdf4llm
+nomic
+semantic_text_splitter
+tokenizers

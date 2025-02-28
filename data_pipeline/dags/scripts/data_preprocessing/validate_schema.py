@@ -3,7 +3,7 @@ def validate_schema(data: list) -> list:
     Validate the schema of the data.
 
     Args:
-    data (list): List of dictionaries containing 'Question', 'Code', and 'Plain_Text' keys.
+    data (list): List of dictionaries containing 'Query', 'Context', and 'Response' keys.
 
     Raises:
     ValueError: If the schema validation fails for any item in the data.
