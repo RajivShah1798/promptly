@@ -44,6 +44,8 @@ def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: st
 
     upload_to_gcs_using_hook(local_path, bucket_name, destination_blob_name)
 
+    return "Data Uploaded SuccessFully!"
+
 
 def upload_to_gcs_using_hook(local_path: str, bucket_name: str, destination_blob_name: str) -> None:
     """
@@ -91,7 +93,7 @@ def upload_docs_data_to_gcs(chunk_store: list, bucket_name: str, destination_blo
         print(f"Created At: {item['created_at']}")
         print("------" * 10)
 
-    local_path = base_dir + "/data/preprocessed_docs_chunk_data.csv"
+    local_path = base_dir + "/data/preprocessed_docs_chunks.csv"
 
     # Create DataFrame from chunk_store
     df = pd.DataFrame(flat_chunk_store)

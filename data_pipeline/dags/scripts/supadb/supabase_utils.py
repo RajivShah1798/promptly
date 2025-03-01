@@ -52,6 +52,7 @@ def push_to_dvc(cleaned_query_results, file_path, RAG_docs=False):
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
+        print('File Path -> ', base_dir + file_path)
         subprocess.run(["dvc", "add", base_dir + file_path], check=True)
 
         subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket

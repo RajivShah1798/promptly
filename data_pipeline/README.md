@@ -21,6 +21,7 @@ The pipeline processes user queries from **Supabase** and prepares them for retr
 - **Push to DVC**: Enables version control for reproducibility.
 - **Trigger Model Training** (if needed).
 - **Send Notifications**: Sends a success email when tasks complete.
+![User Queries Pipeline](../assets/process_user_queries_dag.png)
 
 ---
 
@@ -39,6 +40,7 @@ This pipeline processes and indexes uploaded documents for retrieval:
 - **Upload to GCS**: Saves processed chunks for backup.
 - **Push to DVC**: Ensures version control for document processing.
 - **Send Notifications**: Triggers email alerts upon completion.
+![RAG Document Chunking Pipeline](../assets/rag_data_pipeline_dag.png)
 
 ---
 
@@ -77,12 +79,18 @@ Processes uploaded PDFs and prepares them for retrieval:
 - `validate_schema`: Ensures chunked data structure is valid.
 - `embed_and_store_chunks`: Generates embeddings and stores them in Supabase.
 - `view_and_upload_to_GCS`: Uploads processed chunks to GCS.
+- `push_data_to_dvc`: Tracks query versions in DVC.
+- `send_success_email`: Notifies of completion.
 
 ---
 
 ## Project Directory Structure
 
 ```
+├── assets/
+│   ├── process_user_queries_dag.png  # Project Logo
+│   ├── rag_data_pipeline_dag.png  # Data Pipeline Workflow Diagram
+│
 ├── data_pipeline/
 │   ├── dags/
 │   │   ├── dataPipeline.py  # User Queries DAG
@@ -97,18 +105,24 @@ Processes uploaded PDFs and prepares them for retrieval:
 │   │   │   ├── supadb/
 │   │   │   │   ├── supabase_utils.py  # Supabase Integration
 │   │   │   ├── rag/
+│   │   │   │   ├── validate_schema.py  # Schema Validation
 │   │   │   │   ├── rag_utils.py  # Chunking & Embeddings
+│   │   ├── tests/
+│   │   │   ├── test_data_pii_redact.py  # Unit tests for PII detection and redaction
+│   │   │   ├── test_rag_pipeline.py  # Unit tests for the RAG document chunking pipeline
+│   │   │   ├── test_user_queries.py  # Unit tests for the user queries processing pipeline
 │   ├── config.py  # API Keys & Configurations
-│   ├── README.md  # Project Documentation
+│   ├── README.md  # Data Pipeline Documentation
 │
 ├── data/
-│   ├── raw_documents/  # Original PDFs & Text Files
-│   ├── processed_documents/  # Cleaned & Chunked Data
-│   ├── user_queries.csv  # Raw User Queries
-│   ├── preprocessed_user_data.csv  # Processed Queries
+│   ├── rag_documents/  # Original PDFs & Text Files
+│   ├── preprocessed_docs_chunks.csv/  # Cleaned & Chunked Data
+│   ├── preprocessed_user_data.csv  # Processed User Queries
 │
 ├── .dvc/  # DVC Configuration
 ├── .gitignore
+├── .dvcignore
+├── README.md  # Project Overview
 ├── requirements.txt  # Dependencies
 ```
 
@@ -140,6 +154,7 @@ Ensure you have the following installed:
    ```bash
    gcloud auth login
    gcloud auth application-default login
+   For SSL certificate auth: export SSL_CERT_FILE=$(python -m certifi)
    ```
 4. Initialize DVC:
    ```bash
