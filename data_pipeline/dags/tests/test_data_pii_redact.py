@@ -1,6 +1,6 @@
 import unittest
 from presidio_analyzer import RecognizerResult
-from data_redact import PIIHandler
+from scripts.data_preprocessing.check_pii_data import PIIHandler
 
 class TestPIIHandler(unittest.TestCase):
     

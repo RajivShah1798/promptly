@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from jinja2 import Template  
 from email.mime.multipart import MIMEMultipart
 
-def send_success_email(**kwargs):
+def send_success_email(param1, param2, **kwargs):
     """
     Sends a success notification email to a predefined list of recipients when an Airflow DAG completes successfully.
 
@@ -21,7 +21,7 @@ def send_success_email(**kwargs):
     """
     sender_email = Variable.get('EMAIL_USER')
     password = Variable.get('EMAIL_PASSWORD')
-    receiver_emails = ["vadhaiya.r@northeastern.edu", "bilwal.sagar@northeastern.edu", "kushalshankar03@gmail.com", "shah.rajiv1702@gmail.com"]
+    receiver_emails = ["vadhaiya.r@northeastern.edu", "bilwal.s@northeastern.edu", "kushalshankar03@gmail.com", "shah.rajiv1702@gmail.com"]
 
     # Define subject and body templates
     subject_template = 'Airflow Success: {{ dag.dag_id }} - Data Pipeline tasks succeeded'

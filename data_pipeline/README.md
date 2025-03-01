@@ -77,6 +77,8 @@ Processes uploaded PDFs and prepares them for retrieval:
 - `validate_schema`: Ensures chunked data structure is valid.
 - `embed_and_store_chunks`: Generates embeddings and stores them in Supabase.
 - `view_and_upload_to_GCS`: Uploads processed chunks to GCS.
+- `push_data_to_dvc`: Tracks query versions in DVC.
+- `send_success_email`: Notifies of completion.
 
 ---
 
@@ -140,6 +142,7 @@ Ensure you have the following installed:
    ```bash
    gcloud auth login
    gcloud auth application-default login
+   For SSL certificate auth: export SSL_CERT_FILE=$(python -m certifi)
    ```
 4. Initialize DVC:
    ```bash

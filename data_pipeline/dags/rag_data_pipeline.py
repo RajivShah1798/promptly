@@ -110,7 +110,7 @@ task_upload_processed_data_to_GCS = PythonOperator(
     op_args=[embed_and_store_task.output],
     op_kwargs={
         'bucket_name': 'promptly-chat',
-        'destination_blob_name': 'training_documents/preprocessed_docs_chunk_data.csv'
+        'destination_blob_name': 'training_documents/preprocessed_docs_chunks.csv'
     },
     provide_context=True,
     dag=dag,
@@ -129,6 +129,7 @@ push_data_to_DVC = PythonOperator(
 send_success_email_dag = PythonOperator(
     task_id="send_success_email",
     python_callable=send_success_email,
+    op_args=[task_upload_processed_data_to_GCS.output, push_data_to_DVC.output],
     provide_context = True,
     dag=dag,
 )
