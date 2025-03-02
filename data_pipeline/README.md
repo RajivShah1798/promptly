@@ -1,10 +1,45 @@
 # Promptly Data Pipeline 
 
+## Index
+
+1. [Overview](#overview)
+2. [Data Source](#data-source)
+2. [Data Pipeline - Key Components & Workflow](#data-pipeline---key-components--workflow)
+   - [User Queries Processing Pipeline](#1-user-queries-processing-pipeline)
+   - [Document Processing & RAG Pipeline](#2-document-processing--rag-pipeline)
+3. [Data Storage](#data-storage)
+4. [Airflow DAGs Overview](#airflow-dags-overview)
+   - [User Queries DAG](#1-user-queries-dag-train_user_queries)
+   - [Document Processing DAG](#2-document-processing-dag-document_processing_pipeline)
+5. [Project Directory Structure](#project-directory-structure)
+6. [Setup & Deployment](#setup--deployment)
+7. [Database Schema](#supabase-database-schema)
+8. [Anomaly Detection and Alerts](#anomaly-detection-and-alerts)
+9. [Pipeline Flow Optimization](#pipeline-flow-optimization)
+10. [CI/CD & Model Versioning](#cicd--model-versioning)
+11. [Contributing](#contributing)
+12. [License](#license)
+13. [Contact](#contact)
+
+Detailed Report can be found in assets folder -> [Project Data Pipeline](../assets/Promptly\/Data\/Pipeline\/Report.pdf).  
+[Google Doc link](https://docs.google.com/document/d/19Jd8TC3M7WMPvD455YPUJEYhhlibG4G8-F0f75NPTNw/edit?usp=sharing)
 ## Overview
 
 Promptly is an AI-powered document-based Q&A system designed to retrieve answers from user-uploaded documents (PDFs, text files) using a **Retrieval-Augmented Generation (RAG) pipeline**. The system processes user queries, cleans and validates data, stores embeddings in Supabase, and utilizes **Google Cloud Storage (GCS), Airflow DAGs, and DVC** for **data processing, tracking, and versioning**.
 
 This repository hosts the **data pipeline** for managing document processing, query handling, and RAG workflows.
+
+---
+
+## Data Source
+### 1. User Queries
+- Source: Retrieved from the conversations table in Supabase.
+- Description: This table contains user-generated queries, which we have pre-filled with custom data to simulate various interaction scenarios.
+
+### 2. Documents
+- Source: Focused on IT specifications, we have curated data from publicly available requirements documents.
+- Description: We have selectively gathered documents that provide detailed IT specifications, particularly from the PURE dataset, which comprises 79 publicly available natural language requirements documents collected from the web.
+- Reference: [https://zenodo.org/records/5195084](https://zenodo.org/records/5195084)
 
 ---
 
@@ -127,8 +162,6 @@ Processes uploaded PDFs and prepares them for retrieval:
 ```
 ---
 
-## Detailed Data Pipeline Report in assets directory
-
 ## **Setup & Deployment**
 
 ### **Prerequisites**
@@ -187,10 +220,45 @@ Ensure you have the following installed:
 
 ---
 
+## Supabase Database Schema
+
+- We are using Supabase as our database and embedding store to store user conversations, documents and embedding chunks.
+- Our project has 6 Tables:
+   - users
+   - organizations
+   - documents
+   - document_chunks
+   - conversations
+   - conversation_document
+- Here's the full view of schema:
+
+![Supabase Schema](../assets/promptly_db_schema.png)
+
+---
+
+## Anomaly Detection and Alerts
+
+- We have written custom code to detect any anomalies in our data pipeline.
+- Missing Data Checks: Handled in validate_schema.py.
+- Unexpected Formats Detection: Managed in validate_schema.py and data_utils.py.
+- Anomaly Alerts: Sends email notifications for irregularities.
+
+---
+
+## Pipeline Flow Optimization
+
+- We have tracked the Gantt chart for both  DAGs that we have created, we make sure that every task is modular and consumes minimal time for execution.
+- We have also implemented parallelization in some of our later processing functions.
+- We have optimized our resources to optimise the cost and wait time for each pipeline task.(for example, reducing time from 5min->3min for one of the DAGs)
+
+![Pipeline Flow Optimization](../assets/pipeline_optimization.png)
+
+---
+
 ## **CI/CD & Model Versioning**
 
 - **DVC tracks dataset versions** for reproducibility.
-- **GitHub Actions** handles automated deployments.
+- **GitHub Actions (future enhancement)** handles automated deployments.
 - **MLflow (future enhancement)** for tracking model performance.
 
 ---
