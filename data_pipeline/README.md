@@ -21,7 +21,7 @@
 12. [License](#license)
 13. [Contact](#contact)
 
-Detailed Report can be found in assets folder -> [Project Data Pipeline](../assets/Promptly\/Data\/Pipeline\/Report.pdf).  
+Detailed Report can be found in assets folder -> [Project Data Pipeline](<../assets/Promptly Data Pipeline Report.pdf>)  
 [Google Doc link](https://docs.google.com/document/d/19Jd8TC3M7WMPvD455YPUJEYhhlibG4G8-F0f75NPTNw/edit?usp=sharing)
 ## Overview
 
