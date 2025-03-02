@@ -1,4 +1,4 @@
-# Promptly Data Pipeline
+# Promptly Data Pipeline 
 
 ## Overview
 
@@ -88,7 +88,7 @@ Processes uploaded PDFs and prepares them for retrieval:
 
 ```
 ├── assets/
-│   ├── process_user_queries_dag.png  # Project Logo
+│   ├── process_user_queries_dag.png  # User Query Pipeline Worflow Diagram
 │   ├── rag_data_pipeline_dag.png  # Data Pipeline Workflow Diagram
 │
 ├── data_pipeline/
@@ -125,8 +125,9 @@ Processes uploaded PDFs and prepares them for retrieval:
 ├── README.md  # Project Overview
 ├── requirements.txt  # Dependencies
 ```
-
 ---
+
+## Detailed Data Pipeline Report in assets directory
 
 ## **Setup & Deployment**
 
