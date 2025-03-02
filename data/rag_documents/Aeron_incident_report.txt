@@ -1,0 +1,2795 @@
+﻿Aeron
+=====
+
+[![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/real-logic/Aeron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) To chat with other Aeron users and contributors.
+
+[![GitHub](https://img.shields.io/github/license/real-logic/Aeron.svg)](https://github.com/real-logic/aeron/blob/master/LICENSE)
+[![Javadocs](https://www.javadoc.io/badge/io.aeron/aeron-all.svg)](https://www.javadoc.io/doc/io.aeron/aeron-all)
+
+[![Actions Status](https://github.com/real-logic/aeron/workflows/Continuous%20Integration/badge.svg)](https://github.com/real-logic/aeron/actions)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/real-logic/aeron.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/real-logic/aeron/alerts)
+[![Code Quality: Java](https://img.shields.io/lgtm/grade/java/g/real-logic/aeron.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/real-logic/aeron/context:java)
+[![Code Quality: C/C++](https://img.shields.io/lgtm/grade/cpp/g/real-logic/aeron.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/real-logic/aeron/context:cpp)
+
+Efficient reliable UDP unicast, UDP multicast, and IPC message transport. Java and C++ clients are available in this
+repository, and a [.NET client](https://github.com/AdaptiveConsulting/Aeron.NET) is available from a 3rd party. All
+three clients can exchange messages across machines, or on the same machine via IPC, very efficiently. Message streams
+can be recorded by the [Archive](https://github.com/real-logic/aeron/tree/master/aeron-archive) module to persistent
+storage for later, or real-time, replay.
+
+Performance is the key focus. A design goal for Aeron is to be the highest throughput with the lowest and most
+predictable latency of any messaging system. Aeron integrates with
+[Simple Binary Encoding (SBE)](https://github.com/real-logic/simple-binary-encoding) for the best possible message
+encoding and decoding performance. Many of the data structures used in the creation of Aeron have been factored out to
+the [Agrona](https://github.com/real-logic/agrona) project.
+
+For details of usage, protocol specification, FAQ, etc. please check out the
+[Wiki](https://github.com/real-logic/aeron/wiki).
+
+For those who prefer to watch a video then try [Aeron Messaging](https://www.youtube.com/watch?v=tM4YskS94b0) from
+StrangeLoop 2014. Things have advanced quite a bit with performance and features, but the basic design still applies.
+
+For the latest version information and changes see the [Change Log](https://github.com/real-logic/aeron/wiki/Change-Log)
+with Java **downloads** at [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Caeron).
+
+Commercial support, training, and development on Aeron is available from
+[sales@real-logic.co.uk](mailto:sales@real-logic.co.uk?subject=Aeron). Premium features such as Solarflare ef_vi
+transport bindings for a further 40-60% reduction in latency, and security with ATS (Aeron Transport Security) for
+encrypted communications is available to customers on commercial support.
+
+### How do I use Aeron?
+
+1. [Java Programming Guide](https://github.com/real-logic/aeron/wiki/Java-Programming-Guide)
+1. [C++11 Programming Guide](https://github.com/real-logic/aeron/wiki/Cpp-Programming-Guide)
+1. [Best Practices Guide](https://github.com/real-logic/aeron/wiki/Best-Practices-Guide)
+1. [Monitoring and Debugging](https://github.com/real-logic/aeron/wiki/Monitoring-and-Debugging)
+1. [Configuration Options](https://github.com/real-logic/aeron/wiki/Configuration-Options)
+1. [Channel Specific Configuration](https://github.com/real-logic/aeron/wiki/Channel-Configuration)
+1. [Aeron Archive (Durable/Persistent Stream Storage)](https://github.com/real-logic/aeron/wiki/Aeron-Archive)
+1. [Aeron Cluster (Fault Tolerant Services)](https://github.com/real-logic/aeron/tree/master/aeron-cluster)
+
+### How does Aeron work?
+
+1. [Transport Protocol Specification](https://github.com/real-logic/aeron/wiki/Transport-Protocol-Specification)
+1. [Design Overview](https://github.com/real-logic/aeron/wiki/Design-Overview)
+1. [Design Principles](https://github.com/real-logic/aeron/wiki/Design-Principles)
+1. [Flow Control Semantics](https://github.com/real-logic/aeron/wiki/Flow-and-Congestion-Control)
+1. [Media Driver Operation](https://github.com/real-logic/aeron/wiki/Media-Driver-Operation)
+
+### How do I hack on Aeron?
+
+1. [Hacking on Aeron](https://github.com/real-logic/aeron/wiki/Hacking-on-Aeron)
+1. [Performance Testing](https://github.com/real-logic/aeron/wiki/Performance-Testing)
+
+Build
+-----
+
+### Java Build
+
+Build the project with [Gradle](http://gradle.org/) using this
+[build.gradle](https://github.com/real-logic/aeron/blob/master/build.gradle) file.
+
+You will require the Java 8+ to build Aeron:
+
+* [JDK 8](https://adoptopenjdk.net/index.html) or later, Java versions before 1.8.0_65 are very buggy and can cause
+tests to fail.
+
+Full clean and build of all modules
+
+```shell
+    $ ./gradlew
+```
+    
+### C++ Build
+
+You require the following to build the C++ API for Aeron:
+
+* 3.6.1 or higher of [CMake](http://www.cmake.org/)
+* C++11 supported compiler for the supported platform
+* C11 supported compiler for the supported platform
+* Requirements to build [HdrHistogram_c](https://github.com/HdrHistogram/HdrHistogram_c). 
+* JDK 8 or later to compile the SBE schema definitions used by the archive client.
+
+__Note__: Aeron support is available for 64-bit Linux, OSX, and Windows. 
+
+For convenience, the `cppbuild` script does a full clean, build, and test of all targets as a Release build.
+
+```shell
+    $ ./cppbuild/cppbuild
+```
+
+For those comfortable with CMake - then a clean, build, and test looks like:
+
+```shell
+    $ mkdir -p cppbuild/Debug
+    $ cd cppbuild/Debug
+    $ cmake ../..
+    $ cmake --build . --clean-first
+    $ ctest
+```
+
+#### C Media Driver
+
+By default, the C Media Driver is built as part of the C++ Build. However, it can be disabled via the CMake
+option `BUILD_AERON_DRIVER` being set to `OFF`.
+
+__Note__: C Media Driver is supported on Mac and Linux, the Windows version is experimental.
+
+For dependencies and other information, see the
+[README](https://github.com/real-logic/aeron/blob/master/aeron-driver/src/main/c/README.md).
+
+#### Documentation
+
+If you have doxygen installed and want to build the Doxygen doc, there is a nice `doc` target that can be used.
+
+```shell
+    $ make doc
+```
+    
+#### Packaging
+
+If you would like a packaged version of the compiled API, there is the `package` target that uses CPack. If the doc
+has been built previous to the packaging, it will be included. Packages created are "TGZ;STGZ", but can be changed
+by running `cpack` directly.
+
+```shell
+    $ make package
+```
+
+Running Samples
+---------------
+
+Start up a media driver which will create the data and conductor directories. On Linux, this will probably be in
+`/dev/shm/aeron` or `/tmp/aeron`.
+
+```shell
+    $ java -cp aeron-samples/build/libs/samples.jar io.aeron.driver.MediaDriver
+```
+
+Alternatively, specify the data and conductor directories. The following example uses the shared memory 'directory' on
+Linux, but you could just as easily point to the regular filesystem.
+
+```shell
+    $ java -cp aeron-samples/build/libs/samples.jar -Daeron.dir=/dev/shm/aeron io.aeron.driver.MediaDriver
+```
+
+You can run the `BasicSubscriber` from a command line. On Linux, this will be pointing to the `/dev/shm` shared memory
+directory, so be sure your `MediaDriver` is doing the same!
+
+```shell
+    $ java -cp aeron-samples/build/libs/samples.jar io.aeron.samples.BasicSubscriber
+```
+    
+You can run the `BasicPublisher` from a command line. On Linux, this will be pointing to the `/dev/shm` shared memory
+directory, so be sure your `MediaDriver` is doing the same!
+
+```shell
+    $ java -cp aeron-samples/build/libs/samples.jar io.aeron.samples.BasicPublisher
+```
+
+You can run the `AeronStat` utility to read system counters from a command line
+    
+```shell
+    $ java -cp aeron-samples/build/libs/samples.jar io.aeron.samples.AeronStat
+```
+
+Media Driver Packaging
+----------------------
+
+The Media Driver is packaged by the default build into an application that can be found here
+
+    aeron-driver/build/distributions/aeron-driver-${VERSION}.zip
+
+
+Troubleshooting
+---------------
+
+1. On linux, the subscriber sample throws an exception
+ 
+   ```
+    java.lang.InternalError(a fault occurred in a recent unsafe memory access operation in compiled Java code)
+   ```
+
+   This is actually an out of disk space issue.
+  
+   To alleviate, check to make sure you have enough disk space.
+
+   In the samples, on Linux, this will probably be either at `/dev/shm/aeron` or `/tmp/aeron` (depending on your settings).
+
+   See this [thread](https://issues.apache.org/jira/browse/CASSANDRA-5737?focusedCommentId=14251018&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-14251018) for a similar problem.
+  
+   Note: if you are trying to run this inside a Linux Docker, be aware that, by default, [Docker only allocates 64 MB](https://github.com/docker/docker/issues/2606) to the [shared memory](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=0CB8QFjAA&url=http%3A%2F%2Fwww.cyberciti.biz%2Ftips%2Fwhat-is-devshm-and-its-practical-usage.html&ei=NBEPVcfzLZLWoASv8IKYCA&usg=AFQjCNHwBF2R9m4v_Z9pyNlunei2gH-ssA&sig2=VzzxpzRAGoHRjpH_MhRL8w&bvm=bv.88528373,d.cGU) space at `/dev/shm`. However, the samples will quickly outgrow this.
+  
+   You can work around this issue by using the `--shm-size` argument for `docker run` or `shm_size` in `docker-compose.yaml`.
+
+
+License (See LICENSE file for full license)
+-------------------------------------------
+Copyright 2014-2020 Real Logic Limited
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.  
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+cmake_minimum_required(VERSION 3.6.1 FATAL_ERROR)
+cmake_policy(VERSION 3.6.1)
+
+file(STRINGS version.txt AERON_VERSION_TXT LIMIT_COUNT 1 REGEX "^[0-9]+(\\.[0-9]+)+")
+string(REGEX REPLACE "^([0-9]+(\\.[0-9]+)+).*$" "\\1" AERON_VERSION_FROM_FILE "${AERON_VERSION_TXT}")
+
+if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
+    message(FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory)"
+        "and run CMake from there. You may need to remove CMakeCache.txt.")
+endif ()
+
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+    set(STANDALONE_BUILD TRUE)
+endif ()
+
+option(BUILD_AERON_DRIVER "Build Aeron driver" ON)
+option(BUILD_AERON_ARCHIVE_API "Build Aeron Archive API" ON)
+
+option(C_WARNINGS_AS_ERRORS "Enable warnings as errors for C" OFF)
+option(CXX_WARNINGS_AS_ERRORS "Enable warnings as errors for C++" OFF)
+option(SANITISE_BUILD "Enable sanitise options" OFF)
+option(COVERAGE_BUILD "Enable code coverage" OFF)
+option(AERON_TESTS "Enable tests" ${STANDALONE_BUILD})
+option(AERON_SYSTEM_TESTS "Enable system tests" ${STANDALONE_BUILD})
+option(AERON_SLOW_SYSTEM_TESTS "Enable slow system tests" OFF)
+option(AERON_BUILD_SAMPLES "Enable building the sample projects" ${STANDALONE_BUILD})
+option(LINK_SAMPLES_CLIENT_SHARED "Enable shared linking for sample projects" OFF)
+option(AERON_BUILD_DOCUMENTATION "Build Aeron documentation" ${STANDALONE_BUILD})
+option(AERON_INSTALL_TARGETS "Enable installation step" ${STANDALONE_BUILD})
+if (UNIX)
+    option(AERON_ENABLE_NONSTANDARD_OPTIMIZATIONS "Enable Ofast for release builds" ${STANDALONE_BUILD})
+endif ()
+
+unset(STANDALONE_BUILD)
+
+include(ExternalProject)
+
+project("aeron" VERSION "${AERON_VERSION_FROM_FILE}")
+
+if (AERON_TESTS)
+    enable_testing()
+    include(CTest)
+endif ()
+
+# default built type is Release
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build" FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+
+set(AERON_THIRDPARTY_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty")
+
+##########################################################
+# gmock usage
+
+if (AERON_TESTS)
+    ExternalProject_Add(
+        gmock
+        URL ${CMAKE_CURRENT_SOURCE_DIR}/cppbuild/googletest-release-1.10.0.zip
+        URL_MD5 82358affdd7ab94854c8ee73a180fc53
+        PREFIX "${AERON_THIRDPARTY_BINARY_DIR}/gmock"
+        CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER};-DCMAKE_CXX_FLAGS=-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
+        BUILD_BYPRODUCTS "${AERON_THIRDPARTY_BINARY_DIR}/gmock/src/gmock-build/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX};${AERON_THIRDPARTY_BINARY_DIR}/gmock/src/gmock-build/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        INSTALL_COMMAND ""
+    )
+
+    ExternalProject_Get_Property(gmock source_dir)
+    set(GMOCK_SOURCE_DIR ${source_dir})
+    ExternalProject_Get_Property(gmock binary_dir)
+    set(GMOCK_BINARY_DIR ${binary_dir})
+
+    if (MSVC AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(GMOCK_POSTFIX "d")
+    else ()
+        set(GMOCK_POSTFIX "")
+    endif ()
+
+    set(GMOCK_LIBS
+        ${GMOCK_BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${GMOCK_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${GMOCK_BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${GMOCK_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${GMOCK_BINARY_DIR}/lib/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${GMOCK_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+    )
+endif ()
+
+##########################################################
+# HdrHistogram usage - use MD5 as means to identify snapshot
+
+if (AERON_BUILD_SAMPLES)
+    ExternalProject_Add(
+        hdr_histogram
+        URL ${CMAKE_CURRENT_SOURCE_DIR}/cppbuild/HdrHistogram_c-0.11.2.zip
+        URL_MD5 6050b8c88a2979545522e9fcb17da9bb
+        CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER};-DCMAKE_C_STANDARD=99;-DHDR_LOG_REQUIRED=OFF;-DCMAKE_IGNORE_PATH="optimized;C:/Program Files/PostgreSQL/12/lib"
+        PREFIX "${AERON_THIRDPARTY_BINARY_DIR}/hdr_histogram"
+        BUILD_BYPRODUCTS "${AERON_THIRDPARTY_BINARY_DIR}/hdr_histogram/src/hdr_histogram-build/src/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}hdr_histogram_static${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        INSTALL_COMMAND ""
+    )
+
+    ExternalProject_Get_Property(hdr_histogram source_dir)
+    set(HDRHISTOGRAM_SOURCE_DIR ${source_dir})
+    ExternalProject_Get_Property(hdr_histogram binary_dir)
+    set(HDRHISTOGRAM_BINARY_DIR ${binary_dir})
+
+    set(HDRHISTOGRAM_LIBS
+        ${HDRHISTOGRAM_BINARY_DIR}/src/${CMAKE_CFG_INTDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}hdr_histogram_static${CMAKE_STATIC_LIBRARY_SUFFIX}
+    )
+endif ()
+
+unset(AERON_THIRDPARTY_BINARY_DIR)
+
+##########################################################
+# Platform flags, etc.
+
+find_package(Threads)
+
+##########################################################
+# Doxygen for generating doc
+
+if (AERON_BUILD_DOCUMENTATION)
+    find_package(Doxygen)
+endif ()
+
+if (NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif ()
+
+if (NOT DEFINED CMAKE_CXX_EXTENSIONS)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
+
+if (NOT DEFINED CMAKE_C_STANDARD)
+    set(CMAKE_C_STANDARD 11)
+endif ()
+
+if (NOT DEFINED CMAKE_C_EXTENSIONS)
+    set(CMAKE_C_EXTENSIONS OFF)
+endif ()
+
+add_definitions(-DAERON_VERSION_TXT="${AERON_VERSION_TXT}")
+add_definitions(-DAERON_VERSION_MAJOR=${aeron_VERSION_MAJOR})
+add_definitions(-DAERON_VERSION_MINOR=${aeron_VERSION_MINOR})
+add_definitions(-DAERON_VERSION_PATCH=${aeron_VERSION_PATCH})
+
+# all UNIX-based platform compiler flags
+if (UNIX)
+    add_compile_options(-Wall -Wpedantic -Wextra -Wno-unused-parameter)
+
+    if (C_WARNINGS_AS_ERRORS)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:-Werror>)
+    endif (C_WARNINGS_AS_ERRORS)
+
+    if (CXX_WARNINGS_AS_ERRORS)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
+    endif (CXX_WARNINGS_AS_ERRORS)
+
+    if (SANITISE_BUILD)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fsanitize=leak -fsanitize=undefined -DAERON_SANITIZE_ENABLED")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize=leak -fsanitize=undefined -DAERON_SANITIZE_ENABLED")
+    endif (SANITISE_BUILD)
+
+    if (COVERAGE_BUILD)
+        add_compile_options(-O0 -fno-inline --coverage -g)
+        SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    endif (COVERAGE_BUILD)
+
+    if (AERON_ENABLE_NONSTANDARD_OPTIMIZATIONS)
+        add_compile_options($<$<CONFIG:Release>:-Ofast>)
+    endif ()
+endif ()
+
+# platform specific flags
+if (APPLE)
+    add_compile_options(-Wsign-compare)
+    add_definitions(-DDarwin)
+    add_compile_options(-Wno-deprecated-register)
+elseif (CYGWIN)
+    add_definitions(-DWIN32)
+    if (AERON_TESTS)
+        add_definitions(-DGTEST_HAS_PTHREAD)
+    endif ()
+    set(CMAKE_CXX_EXTENSIONS ON)
+elseif (MSVC)
+    add_definitions(-DWIN32)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_CRT_NONSTDC_NO_WARNINGS)
+    add_definitions(-DNOMINMAX)
+
+    if (${MSVC_VERSION} GREATER_EQUAL 1915)
+        # Acknowledge that we understand MSVC resolved a byte alignment issue in this compiler
+        add_definitions(-D_ENABLE_EXTENDED_ALIGNED_STORAGE)
+    endif ()
+
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd /Od /Zi /MP")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /MP")
+
+    unset(CMAKE_C_STANDARD) # To avoid `/std:c11` in the compiler options
+
+    if (C_WARNINGS_AS_ERRORS)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:/WX>)
+    endif (C_WARNINGS_AS_ERRORS)
+
+    if (CXX_WARNINGS_AS_ERRORS)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/WX>)
+    endif (CXX_WARNINGS_AS_ERRORS)
+endif ()
+
+
+##########################################################
+# Project variables, etc.
+
+if (MSVC)
+    set(GRADLE_WRAPPER "gradlew.bat" CACHE INTERNAL "Location of the Gradle wrapper script")
+else ()
+    set(GRADLE_WRAPPER "./gradlew" CACHE INTERNAL "Location of the Gradle wrapper script")
+endif ()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/binaries")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
+
+if (AERON_BUILD_SAMPLES)
+    set(AERON_SAMPLES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-samples/src/main/cpp")
+    set(AERON_C_SAMPLES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-samples/src/main/c")
+endif ()
+
+set(AERON_CLIENT_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/main/cpp")
+
+set(AERON_CLIENT_WRAPPER_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/main/cpp_wrapper")
+
+set(AERON_C_CLIENT_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/main/c")
+
+set(AERON_DRIVER_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-driver/src/main/c")
+
+set(AERON_ARCHIVE_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-archive/src/main/cpp")
+
+if (AERON_TESTS)
+    set(AERON_CLIENT_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/test/cpp")
+    set(AERON_DRIVER_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-driver/src/test/c")
+    set(AERON_C_CLIENT_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/test/c")
+    set(AERON_CLIENT_WRAPPER_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-client/src/test/cpp_wrapper")
+    set(AERON_ARCHIVE_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-archive/src/test/cpp")
+    set(AERON_SYSTEM_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/aeron-system-tests")
+
+    # gmock - includes gtest
+    include_directories(${GMOCK_SOURCE_DIR}/googletest/include)
+    include_directories(${GMOCK_SOURCE_DIR}/googlemock/include)
+endif ()
+
+if (AERON_BUILD_SAMPLES)
+    # hdr_histogram
+    include_directories(${HDRHISTOGRAM_SOURCE_DIR}/src)
+endif ()
+
+##########################################################
+
+add_definitions(-D_FILE_OFFSET_BITS=64)
+
+add_subdirectory(${AERON_C_CLIENT_SOURCE_PATH})
+
+add_subdirectory(${AERON_CLIENT_SOURCE_PATH})
+add_subdirectory(${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+
+if (AERON_TESTS)
+    add_subdirectory(${AERON_CLIENT_TEST_PATH})
+    add_subdirectory(${AERON_C_CLIENT_TEST_PATH})
+    add_subdirectory(${AERON_CLIENT_WRAPPER_TEST_PATH})
+endif ()
+if (AERON_BUILD_SAMPLES)
+    add_subdirectory(${AERON_SAMPLES_PATH})
+    add_subdirectory(${AERON_C_SAMPLES_PATH})
+endif ()
+
+if (BUILD_AERON_DRIVER)
+    add_subdirectory(${AERON_DRIVER_SOURCE_PATH})
+    if (AERON_TESTS)
+        add_subdirectory(${AERON_DRIVER_TEST_PATH})
+        add_subdirectory(${AERON_SYSTEM_TEST_PATH})
+    endif ()
+endif (BUILD_AERON_DRIVER)
+
+if (BUILD_AERON_ARCHIVE_API)
+    set(ARCHIVE_CODEC_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    set(ARCHIVE_CODEC_SCHEMA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/aeron-archive/src/main/resources/archive")
+    set(ARCHIVE_CODEC_WORKING_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+    add_subdirectory(${AERON_ARCHIVE_SOURCE_PATH})
+    set(AERON_ALL_JAR "${CMAKE_CURRENT_SOURCE_DIR}/aeron-all/build/libs/aeron-all-${AERON_VERSION_TXT}.jar")
+
+    file(GLOB_RECURSE AERON_ALL_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}}/aeron-archive/src/main/java/*.java")
+
+    add_custom_command(OUTPUT ${AERON_ALL_JAR}
+        COMMAND ${GRADLE_WRAPPER} :aeron-all:clean :aeron-all:assemble --no-daemon -x javadoc --console=plain -q
+        DEPENDS ${AERON_ALL_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating aeron-all jar")
+
+    add_custom_target(aeron-all-jar
+        DEPENDS ${AERON_ALL_JAR})
+
+    if (AERON_TESTS)
+        add_subdirectory(${AERON_ARCHIVE_TEST_PATH})
+    endif ()
+endif (BUILD_AERON_ARCHIVE_API)
+##########################################################
+# doc target
+
+if (AERON_BUILD_DOCUMENTATION AND DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cppbuild/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+
+    add_custom_target(
+        doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+
+    if (AERON_INSTALL_TARGETS)
+        # install the doc if it has been built
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc DESTINATION share OPTIONAL)
+    endif ()
+endif ()
+
+##########################################################
+# package target
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR "${aeron_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${aeron_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${aeron_VERSION_PATCH}")
+
+set(CPACK_GENERATOR "TGZ;STGZ")
+include(CPack)
+# Contributing to Aeron
+
+If you would like to contribute code you can do so through GitHub by sending a pull request or raising an issue with an attached patch.
+
+When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible.
+
+## License
+
+By contributing your code, you agree to license your contribution under the terms of the APLv2:
+ 
+https://github.com/real-logic/aeron/blob/master/LICENSE
+
+All files are made available under the Apache 2.0 license.
+
+If you are adding a new file it should have the following header:
+
+```
+/*
+ * Copyright 2014-2020 Real Logic Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ ```Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+
+"License" shall mean the terms and conditions for use, reproduction, and
+distribution as defined by Sections 1 through 9 of this document.
+
+"Licensor" shall mean the copyright owner or entity authorized by the copyright
+owner that is granting the License.
+
+"Legal Entity" shall mean the union of the acting entity and all other entities
+that control, are controlled by, or are under common control with that entity.
+For the purposes of this definition, "control" means (i) the power, direct or
+indirect, to cause the direction or management of such entity, whether by
+contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the
+outstanding shares, or (iii) beneficial ownership of such entity.
+
+"You" (or "Your") shall mean an individual or Legal Entity exercising
+permissions granted by this License.
+
+"Source" form shall mean the preferred form for making modifications, including
+but not limited to software source code, documentation source, and configuration
+files.
+
+"Object" form shall mean any form resulting from mechanical transformation or
+translation of a Source form, including but not limited to compiled object code,
+generated documentation, and conversions to other media types.
+
+"Work" shall mean the work of authorship, whether in Source or Object form, made
+available under the License, as indicated by a copyright notice that is included
+in or attached to the work (an example is provided in the Appendix below).
+
+"Derivative Works" shall mean any work, whether in Source or Object form, that
+is based on (or derived from) the Work and for which the editorial revisions,
+annotations, elaborations, or other modifications represent, as a whole, an
+original work of authorship. For the purposes of this License, Derivative Works
+shall not include works that remain separable from, or merely link (or bind by
+name) to the interfaces of, the Work and Derivative Works thereof.
+
+"Contribution" shall mean any work of authorship, including the original version
+of the Work and any modifications or additions to that Work or Derivative Works
+thereof, that is intentionally submitted to Licensor for inclusion in the Work
+by the copyright owner or by an individual or Legal Entity authorized to submit
+on behalf of the copyright owner. For the purposes of this definition,
+"submitted" means any form of electronic, verbal, or written communication sent
+to the Licensor or its representatives, including but not limited to
+communication on electronic mailing lists, source code control systems, and
+issue tracking systems that are managed by, or on behalf of, the Licensor for
+the purpose of discussing and improving the Work, but excluding communication
+that is conspicuously marked or otherwise designated in writing by the copyright
+owner as "Not a Contribution."
+
+"Contributor" shall mean Licensor and any individual or Legal Entity on behalf
+of whom a Contribution has been received by Licensor and subsequently
+incorporated within the Work.
+
+2. Grant of Copyright License.
+
+Subject to the terms and conditions of this License, each Contributor hereby
+grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free,
+irrevocable copyright license to reproduce, prepare Derivative Works of,
+publicly display, publicly perform, sublicense, and distribute the Work and such
+Derivative Works in Source or Object form.
+
+3. Grant of Patent License.
+
+Subject to the terms and conditions of this License, each Contributor hereby
+grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free,
+irrevocable (except as stated in this section) patent license to make, have
+made, use, offer to sell, sell, import, and otherwise transfer the Work, where
+such license applies only to those patent claims licensable by such Contributor
+that are necessarily infringed by their Contribution(s) alone or by combination
+of their Contribution(s) with the Work to which such Contribution(s) was
+submitted. If You institute patent litigation against any entity (including a
+cross-claim or counterclaim in a lawsuit) alleging that the Work or a
+Contribution incorporated within the Work constitutes direct or contributory
+patent infringement, then any patent licenses granted to You under this License
+for that Work shall terminate as of the date such litigation is filed.
+
+4. Redistribution.
+
+You may reproduce and distribute copies of the Work or Derivative Works thereof
+in any medium, with or without modifications, and in Source or Object form,
+provided that You meet the following conditions:
+
+You must give any other recipients of the Work or Derivative Works a copy of
+this License; and
+You must cause any modified files to carry prominent notices stating that You
+changed the files; and
+You must retain, in the Source form of any Derivative Works that You distribute,
+all copyright, patent, trademark, and attribution notices from the Source form
+of the Work, excluding those notices that do not pertain to any part of the
+Derivative Works; and
+If the Work includes a "NOTICE" text file as part of its distribution, then any
+Derivative Works that You distribute must include a readable copy of the
+attribution notices contained within such NOTICE file, excluding those notices
+that do not pertain to any part of the Derivative Works, in at least one of the
+following places: within a NOTICE text file distributed as part of the
+Derivative Works; within the Source form or documentation, if provided along
+with the Derivative Works; or, within a display generated by the Derivative
+Works, if and wherever such third-party notices normally appear. The contents of
+the NOTICE file are for informational purposes only and do not modify the
+License. You may add Your own attribution notices within Derivative Works that
+You distribute, alongside or as an addendum to the NOTICE text from the Work,
+provided that such additional attribution notices cannot be construed as
+modifying the License.
+You may add Your own copyright statement to Your modifications and may provide
+additional or different license terms and conditions for use, reproduction, or
+distribution of Your modifications, or for any such Derivative Works as a whole,
+provided Your use, reproduction, and distribution of the Work otherwise complies
+with the conditions stated in this License.
+
+5. Submission of Contributions.
+
+Unless You explicitly state otherwise, any Contribution intentionally submitted
+for inclusion in the Work by You to the Licensor shall be under the terms and
+conditions of this License, without any additional terms or conditions.
+Notwithstanding the above, nothing herein shall supersede or modify the terms of
+any separate license agreement you may have executed with Licensor regarding
+such Contributions.
+
+6. Trademarks.
+
+This License does not grant permission to use the trade names, trademarks,
+service marks, or product names of the Licensor, except as required for
+reasonable and customary use in describing the origin of the Work and
+reproducing the content of the NOTICE file.
+
+7. Disclaimer of Warranty.
+
+Unless required by applicable law or agreed to in writing, Licensor provides the
+Work (and each Contributor provides its Contributions) on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,
+including, without limitation, any warranties or conditions of TITLE,
+NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are
+solely responsible for determining the appropriateness of using or
+redistributing the Work and assume any risks associated with Your exercise of
+permissions under this License.
+
+8. Limitation of Liability.
+
+In no event and under no legal theory, whether in tort (including negligence),
+contract, or otherwise, unless required by applicable law (such as deliberate
+and grossly negligent acts) or agreed to in writing, shall any Contributor be
+liable to You for damages, including any direct, indirect, special, incidental,
+or consequential damages of any character arising as a result of this License or
+out of the use or inability to use the Work (including but not limited to
+damages for loss of goodwill, work stoppage, computer failure or malfunction, or
+any and all other commercial damages or losses), even if such Contributor has
+been advised of the possibility of such damages.
+
+9. Accepting Warranty or Additional Liability.
+
+While redistributing the Work or Derivative Works thereof, You may choose to
+offer, and charge a fee for, acceptance of support, warranty, indemnity, or
+other liability obligations and/or rights consistent with this License. However,
+in accepting such obligations, You may act only on Your own behalf and on Your
+sole responsibility, not on behalf of any other Contributor, and only if You
+agree to indemnify, defend, and hold each Contributor harmless for any liability
+incurred by, or claims asserted against, such Contributor by reason of your
+accepting any such warranty or additional liability.
+
+END OF TERMS AND CONDITIONS
+
+APPENDIX: How to apply the Apache License to your work
+
+To apply the Apache License to your work, attach the following boilerplate
+notice, with the fields enclosed by brackets "[]" replaced with your own
+identifying information. (Don't include the brackets!) The text should be
+enclosed in the appropriate comment syntax for the file format. We also
+recommend that a file or class name and description of purpose be included on
+the same "printed page" as the copyright notice for easier identification within
+third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+1.32.0-SNAPSHOTAeron Cluster
+===
+
+**Note:** Aeron Cluster is currently a preview feature, commercial support is available from
+ [sales@real-logic.co.uk](mailto:sales@real-logic.co.uk?subject=Aeron%20Cluster).
+
+The purpose of Aeron Cluster is to aggregate and sequence streams from cluster clients into a single log. This log is
+replicated and archived on a number of nodes to achieve fault tolerance. Cluster services process this log and respond
+to cluster clients.
+
+Aeron Cluster works on the concept of a strong leader using an adaptation of the [Raft](https://raft.github.io/raft.pdf)
+protocol. The leader sequences the log and is responsible for replicating it to other cluster members known as
+followers.
+
+Aeron Cluster is composed of a number of components. Central is the Consensus Module which sequences the log and
+coordinates consensus on the recording of the sequenced log to persistent storage, and the services consuming the log
+across cluster members. Recording of the log to persistent storage is performed by the Aeron Archive module. Services
+consume the log once a majority of the cluster members have safely recorded the log to persistent storage.
+
+To enable fast recovery the services and consensus module can take a snapshot of their state as of a given log position
+thus enabling recovery by loading the most recent snapshot and replaying logs from that point forward. Snapshots are
+recorded as streams in the Archive for local and remote replay so that a distributed file system is not required.
+
+[Cluster Tutorial](https://github.com/real-logic/aeron/wiki/Cluster-Tutorial) is a good place to start.
+
+Usage
+=====
+
+The cluster can run in various configurations:
+
+ - **Single Node:** For development, debugging, or when a sequenced and archived log on a single node is sufficient.
+ - **Appointed Leader:** A leader of the cluster can be appointed via configuration without requiring an election.
+    In the event of a leader failure then a follower will have to be manually appointed the new leader.
+ - **Automatic Elections:** Automatic elections can be enabled to have a leader elected at random from the members with
+    the most up to date log.
+ - **Dynamic Membership:** Cluster node membership can be dynamic with support for members to join and quit the cluster
+    with membership changes recorded in the log.
+       
+Based on the membership size, consensus is determined by the majority of the cluster members. Clusters should be 3 or 5
+in population size. However, 2 node clusters are supported whereby both members must agree the log 
+and in the event of failure the remaining member must be manually reconfigured as a single node cluster.
+
+Protocol
+=====
+
+Messages specification is in SBE in [aeron-cluster-codecs.xml](https://github.com/real-logic/aeron/blob/master/aeron-cluster/src/main/resources/cluster/aeron-cluster-codecs.xml).
+Aeron Agent
+===
+
+[![Javadocs](http://www.javadoc.io/badge/io.aeron/aeron-all.svg)](http://www.javadoc.io/doc/io.aeron/aeron-all)
+
+A Java agent which when attached to a JVM will weave byte code to intercept and log events that
+implement [EventCode](https://github.com/real-logic/aeron/blob/master/aeron-agent/src/main/java/io/aeron/agent/EventCode.java),
+those include [DriverEventCode](https://github.com/real-logic/aeron/blob/master/aeron-agent/src/main/java/io/aeron/agent/DriverEventCode.java), [ArchiveEventCode](https://github.com/real-logic/aeron/blob/master/aeron-agent/src/main/java/io/aeron/agent/ArchiveEventCode.java),
+and [ClusterEventCode](https://github.com/real-logic/aeron/blob/master/aeron-agent/src/main/java/io/aeron/agent/ClusterEventCode.java)
+
+Events are recorded to an in-memory
+[RingBuffer](https://github.com/real-logic/agrona/blob/master/agrona/src/main/java/org/agrona/concurrent/ringbuffer/RingBuffer.java)
+which is consumed and appended asynchronously to a log as defined by the system property `aeron.event.log.reader.classname`
+for the reader [Agent](https://github.com/real-logic/agrona/blob/master/agrona/src/main/java/org/agrona/concurrent/Agent.java)
+which defaults to [EventLogReaderAgent](https://github.com/real-logic/aeron/blob/master/aeron-agent/src/main/java/io/aeron/agent/EventLogReaderAgent.java).# Aeron Samples
+
+Here you will find a collection of samples and tools for Aeron.
+
+Each of the Samples can be run with a simple script that can be found in:
+
+    aeron-samples/scripts/
+
+Before running any of the samples below the media driver needs to be launched by running one of:
+
+    aeron-samples/scripts/media-driver <optional properties file>
+    aeron-samples/scripts/low-latency-media-driver <optional properties file>
+    
+Here is a brief list of the samples and what each tries to do:
+
+- __BasicSubscriber__: Simple subscriber that prints the contents of messages it receives.
+- __BasicPublisher__: Simple publisher that sends a number of messages with a one-second pause between them.
+- __RateSubscriber__: Subscriber that prints the rate of reception of messages.
+- __StreamingPublisher__: Publisher that streams out messages as fast as possible, displaying rate of publication.
+- __Ping__: Ping side of Ping/Pong latency testing tool.
+- __Pong__: Pong side of Ping/Pong latency testing tool.
+
+Here is a brief list of monitoring and diagnostic tools:
+
+- __AeronStat__: Monitoring tool that prints the labels and values of the counters in use by a media driver.
+- __ErrorStat__: Monitoring tool that prints the distinct errors observed by the media driver.
+- __LossStat__: Monitoring tool that prints a report of loss recorded by stream.
+- __BacklogStat__: Monitoring tool that prints a report of stream positions to give and indication of backlog for processing on each stream.
+- __LogInspector__: Diagnostic tool that prints out the contents of a log buffer for a given stream for debugging.
+
+Also included is some performance tests that can run all in the same process for convenience without a media driver,
+ or across processes for illustration, with variants for throughput or latency measurement:
+
+- __embedded__: Tests tend to run in the same process.
+- __media__: Variants for IPC using shared memory or UDP via the network.
+
+## Aeron Archive Samples
+
+In the [archive](https://github.com/real-logic/aeron/tree/master/aeron-samples/scripts/archive) sub-directory, 
+or package, you can find samples for recording and replay of streams from an Archive.
+
+    aeron-samples/scripts/archive/
+# Aeron Archive Samples
+
+The scripts in this directory can launch the sample applications for the [Aeron Archive](https://github.com/real-logic/aeron/tree/master/aeron-archive) service with the code samples
+[here](https://github.com/real-logic/aeron/tree/master/aeron-samples/src/main/java/io/aeron/samples/archive) and
+systems tests [here](https://github.com/real-logic/aeron/tree/master/aeron-system-tests/src/test/java/io/aeron/archive).
+
+## Embedded Throughput Samples
+
+Suitable for measuring IO performance of your system. The samples will default to creating
+an archive directory on the temporary file system. It is recommended that a properties file is provided
+by passing it as argument to the script. The `aeron.archive.dir` property should be located on fast storage.
+
+### Recording Throughput
+
+`embedded-recording-throughput`: Will record a number of messages using the `SampleConfiguration` properties then 
+ask if the test should be repeated. Doing it multiple times allows the system to warm up.
+
+It is worth trying different levels of write synchronisation for durability.
+
+- `aeron.archive.file.sync.level=0`: for normal writes to the OS page cache for background writing to disk.
+- `aeron.archive.file.sync.level=1`: for forcing the dirty data pages to disk. 
+- `aeron.archive.file.sync.level=2`: for forcing the dirty data pages and file metadata to disk. 
+
+### Replay Throughput
+
+`embedded-replay-throughput`: Will record a number of messages using the `SampleConfiguration` properties then
+replay them on a new stream. The test will ask to repeat the replay of record message and doing it multiple times
+allows for the system to warm up.
+
+It is worth playing with different messages lengths and threading configurations.
+
+## Basic Publication and Subscription to an archived stream
+
+1. Start the archiving media driver in its own console.
+
+```
+    $ archiving-media-driver <config properties file>
+```
+
+2. Start the publisher with its recorded publication in its own console.
+
+```
+    $ recorded-basic-publisher <config properties file>
+```
+    
+
+3. Start a normal subscriber so the publication connects and can record.
+
+```
+    $ cd ..
+    $ basic-subscriber <config properties file>
+```
+
+4. Start a subscriber that requests replay of the recorded stream.
+
+```
+    $ replay-basic-subscriber <config properties file>
+```
+
+5. Optionally run AeronStat and observe status, look out for the `rec-pos` counter for the recorded stream. 
+  
+```
+    $ aeron-stat
+```
+
+6. Check for errors.
+
+```
+    $ error-stat
+```
+ 
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+set(CLIENT_LINK_LIB "aeron_client")
+set(CLIENT_WRAPPER_LINK_LIB "aeron_client_wrapper")
+set(C_CLIENT_LINK_LIB "aeron_static")
+if (LINK_SAMPLES_CLIENT_SHARED OR MSVC)
+    set(C_CLIENT_LINK_LIB "aeron")
+    set(CLIENT_LINK_LIB "aeron_client_shared")
+    add_definitions(-DCLIENT_SHARED)
+endif ()
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DDISABLE_BOUNDS_CHECKS")
+
+set(HEADERS
+    Configuration.h
+    RateReporter.h)
+
+add_executable(BasicPublisher BasicPublisher.cpp ${HEADERS})
+add_executable(BasicSubscriber BasicSubscriber.cpp ${HEADERS})
+add_executable(StreamingPublisher StreamingPublisher.cpp ${HEADERS})
+add_executable(RateSubscriber RateSubscriber.cpp ${HEADERS})
+add_executable(Pong Pong.cpp ${HEADERS})
+add_executable(Ping Ping.cpp ${HEADERS})
+add_executable(BasicPublisherW BasicPublisher.cpp ${HEADERS})
+add_executable(BasicSubscriberW BasicSubscriber.cpp ${HEADERS})
+add_executable(StreamingPublisherW StreamingPublisher.cpp ${HEADERS})
+add_executable(RateSubscriberW RateSubscriber.cpp ${HEADERS})
+add_executable(PongW Pong.cpp ${HEADERS})
+add_executable(PingW Ping.cpp ${HEADERS})
+add_executable(TimeTests raw/TimeTests.cpp ${HEADERS})
+add_executable(Throughput Throughput.cpp ${HEADERS})
+add_executable(ExclusiveThroughput ExclusiveThroughput.cpp ${HEADERS})
+add_executable(PingPong PingPong.cpp ${HEADERS})
+
+target_include_directories(BasicPublisher
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(BasicPublisher
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(BasicSubscriber
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(BasicSubscriber
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(StreamingPublisher
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(StreamingPublisher
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(RateSubscriber
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(RateSubscriber
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(Pong
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(Pong
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(Ping
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(Ping
+    ${CLIENT_LINK_LIB}
+    ${HDRHISTOGRAM_LIBS})
+
+add_dependencies(Ping hdr_histogram)
+
+target_include_directories(BasicPublisherW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(BasicPublisherW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB})
+
+target_include_directories(BasicSubscriberW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(BasicSubscriberW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB})
+
+target_include_directories(StreamingPublisherW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(StreamingPublisherW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB})
+
+target_include_directories(RateSubscriberW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(RateSubscriberW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB})
+
+target_include_directories(PongW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(PongW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB})
+
+target_include_directories(PingW
+    PUBLIC ${AERON_C_CLIENT_SOURCE_PATH} ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+target_link_libraries(PingW
+    ${CLIENT_WRAPPER_LINK_LIB} ${C_CLIENT_LINK_LIB}
+    ${HDRHISTOGRAM_LIBS})
+
+add_dependencies(PingW hdr_histogram)
+
+target_include_directories(Throughput
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(Throughput
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(ExclusiveThroughput
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(ExclusiveThroughput
+    ${CLIENT_LINK_LIB})
+
+target_include_directories(PingPong
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(PingPong
+    ${CLIENT_LINK_LIB}
+    ${HDRHISTOGRAM_LIBS})
+
+target_include_directories(TimeTests
+    PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+target_link_libraries(TimeTests
+    ${CMAKE_THREAD_LIBS_INIT})
+
+add_dependencies(PingPong hdr_histogram)
+
+if (AERON_INSTALL_TARGETS)
+    install(
+        TARGETS
+        BasicPublisher
+        TimeTests
+        BasicSubscriber
+        StreamingPublisher
+        RateSubscriber
+        Ping
+        Pong
+        Throughput
+        ExclusiveThroughput
+        PingPong
+        BasicPublisherW
+        BasicSubscriberW
+        PingW
+        PongW
+        RateSubscriberW
+        DESTINATION bin)
+endif ()
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
+    add_definitions(-D_DEFAULT_SOURCE)
+endif ()
+
+set(CLIENT_LINK_LIB "aeron")
+if (LINK_SAMPLES_CLIENT_SHARED)
+    set(CLIENT_LINK_LIB "aeron_shared")
+    add_definitions(-DCLIENT_SHARED)
+endif ()
+
+include_directories(${AERON_CLIENT_SOURCE_PATH})
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -DDISABLE_BOUNDS_CHECKS")
+
+set(SOURCES
+    sample_util.c)
+
+set(HEADERS
+    samples_configuration.h
+    sample_util.h)
+
+add_executable(basic_publisher basic_publisher.c ${HEADERS} ${SOURCES})
+add_executable(basic_subscriber basic_subscriber.c ${HEADERS} ${SOURCES})
+add_executable(rate_subscriber rate_subscriber.c ${HEADERS} ${SOURCES})
+add_executable(streaming_publisher streaming_publisher.c ${HEADERS} ${SOURCES})
+add_executable(streaming_exclusive_publisher streaming_exclusive_publisher.c ${HEADERS} ${SOURCES})
+add_executable(cpong cpong.c ${HEADERS} ${SOURCES})
+add_executable(cping cping.c ${HEADERS} ${SOURCES})
+
+target_link_libraries(basic_publisher
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(basic_subscriber
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(rate_subscriber
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(streaming_publisher
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(streaming_exclusive_publisher
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(cpong
+    ${CLIENT_LINK_LIB})
+
+target_link_libraries(cping
+    ${CLIENT_LINK_LIB}
+    ${HDRHISTOGRAM_LIBS})
+
+add_dependencies(cping hdr_histogram)
+
+add_executable(AeronStat aeron_stat.c ${HEADERS})
+target_link_libraries(AeronStat ${CLIENT_LINK_LIB})
+
+add_executable(DriverTool driver_tool.c ${HEADERS})
+target_link_libraries(DriverTool ${CLIENT_LINK_LIB})
+
+add_executable(ErrorStat error_stat.c ${HEADERS})
+target_link_libraries(ErrorStat ${CLIENT_LINK_LIB})
+
+add_executable(LossStat loss_stat.c ${HEADERS})
+target_link_libraries(LossStat ${CLIENT_LINK_LIB})
+
+
+if (AERON_INSTALL_TARGETS)
+    install(
+        TARGETS
+        basic_publisher
+        basic_subscriber
+        rate_subscriber
+        streaming_publisher
+        streaming_exclusive_publisher
+        cpong
+        cping
+        AeronStat
+        DriverTool
+        ErrorStat
+        LossStat
+        DESTINATION bin)
+endif ()
+Aeron Media Driver
+===
+
+[![Javadocs](http://www.javadoc.io/badge/io.aeron/aeron-all.svg)](http://www.javadoc.io/doc/io.aeron/aeron-all)
+
+The media driver can run in, or out of, process with aeron clients. It is responsible for replicating publications
+to appear as images over a network, aka the media.
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(AERON_LIB_WINSOCK_LIBS wsock32 ws2_32 Iphlpapi)
+endif ()
+
+include_directories(${AERON_DRIVER_SOURCE_PATH})
+
+set(TEST_HEADERS
+    aeron_driver_conductor_test.h
+    aeron_receiver_test.h
+    EmbeddedMediaDriver.h
+    aeron_test_udp_bindings.h
+    aeron_test_base.h)
+
+set(CMAKE_EXTRA_INCLUDE_FILES sys/socket.h)
+check_type_size("struct mmsghdr" STRUCT_MMSGHDR_TYPE_EXISTS)
+set(CMAKE_EXTRA_INCLUDE_FILES)
+
+function(aeron_driver_test name file)
+    add_executable(${name} ${file} ${TEST_HEADERS})
+    target_link_libraries(${name} aeron_driver ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${AERON_LIB_WINSOCK_LIBS})
+    target_compile_definitions(${name} PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    if (STRUCT_MMSGHDR_TYPE_EXISTS)
+        target_compile_definitions(${name} PUBLIC -DHAVE_STRUCT_MMSGHDR)
+    endif ()
+    add_dependencies(${name} gmock)
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
+aeron_driver_test(counters_manager_test aeron_counters_manager_test.cpp)
+aeron_driver_test(driver_conductor_ipc_test aeron_driver_conductor_ipc_test.cpp)
+aeron_driver_test(driver_conductor_network_test aeron_driver_conductor_network_test.cpp)
+aeron_driver_test(driver_conductor_pub_sub_test aeron_driver_conductor_pub_sub_test.cpp)
+aeron_driver_test(driver_conductor_spy_test aeron_driver_conductor_spy_test.cpp)
+aeron_driver_test(driver_conductor_counter_test aeron_driver_conductor_counter_test.cpp)
+aeron_driver_test(driver_conductor_clock_test aeron_driver_conductor_clock_test.cpp)
+aeron_driver_test(uri_driver_test aeron_driver_uri_test.cpp)
+aeron_driver_test(udp_channel_test aeron_udp_channel_test.cpp)
+aeron_driver_test(term_scanner_test aeron_term_scanner_test.cpp)
+aeron_driver_test(loss_detector_test aeron_loss_detector_test.cpp)
+aeron_driver_test(retransmit_handler_test aeron_retransmit_handler_test.cpp)
+aeron_driver_test(loss_reporter_test aeron_loss_reporter_test.cpp)
+aeron_driver_test(logbuffer_unblocker aeron_logbuffer_unblocker_test.cpp)
+aeron_driver_test(term_gap_filler_test aeron_term_gap_filler_test.cpp)
+aeron_driver_test(parse_util_test aeron_parse_util_test.cpp)
+aeron_driver_test(properties_test aeron_properties_test.cpp)
+aeron_driver_test(driver_configuration_test aeron_driver_configuration_test.cpp)
+aeron_driver_test(driver_agent_test agent/aeron_driver_agent_test.cpp)
+aeron_driver_test(udp_channel_transport_loss_test media/aeron_udp_channel_transport_loss_test.cpp)
+aeron_driver_test(flow_control_test aeron_flow_control_test.cpp)
+aeron_driver_test(name_resolver_test aeron_name_resolver_test.cpp)
+aeron_driver_test(name_resolver_cache_test aeron_name_resolver_cache_test.cpp)
+aeron_driver_test(data_packet_dispatcher_test aeron_data_packet_dispatcher_test.cpp)
+aeron_driver_test(publication_image_test aeron_publication_image_test.cpp)
+set_tests_properties(publication_image_test PROPERTIES RUN_SERIAL TRUE)
+
+aeron_driver_test(c_terminate_test aeron_c_terminate_test.cpp)
+set_tests_properties(c_terminate_test PROPERTIES TIMEOUT 60)
+set_tests_properties(c_terminate_test PROPERTIES RUN_SERIAL TRUE)
+
+aeron_driver_test(c_system_test aeron_c_system_test.cpp)
+set_tests_properties(c_system_test PROPERTIES TIMEOUT 60)
+set_tests_properties(c_system_test PROPERTIES RUN_SERIAL TRUE)
+
+aeron_driver_test(c_local_addresses_test aeron_c_local_addresses_test.cpp)
+set_tests_properties(c_local_addresses_test PROPERTIES TIMEOUT 60)
+set_tests_properties(c_local_addresses_test PROPERTIES RUN_SERIAL TRUE)
+
+aeron_driver_test(c_cnc_test aeron_c_cnc_test.cpp)
+set_tests_properties(c_cnc_test PROPERTIES TIMEOUT 60)
+set_tests_properties(c_cnc_test PROPERTIES RUN_SERIAL TRUE)
+
+aeron_driver_test(congestion_control_test aeron_congestion_control_test.cpp)
+# C Media Driver
+
+Here you will find the source for the C Media Driver for Aeron. The build process builds
+a binary for the driver and places it in the following location
+
+    ${CMAKE_CURRENT_BINARY_DIR}/binaries/aeronmd
+
+## Dependencies
+
+The driver binary requires the following dependencies.
+
+- Aeron C Driver Library, source of which is included here and built and placed in `${CMAKE_CURRENT_BINARY_DIR}/lib`
+- Linux Dependencies:
+    - C Library (for the system built on)
+    - `-lpthread` - pthread Library
+    - `-ldl` - DL Library
+    - `-lbsd` - BSD Library (optional - will use /dev/urandom directly instead of arc4random if not available)
+    - `-luuid` - UUID Library (optional - will use pure random Receiver ID if not available)
+    - `-lm` - Math Library
+- Windows Dependencies:
+	- Windows Version >= Vista 
+	- MSVC >= v141 (Visual Studio 2017)
+	
+## Configuration
+
+All configuration for the C media driver is done, currently, via environment variables. The variables are directly related to the Java properties
+for the Java media driver. The environment variables simply have `_` in the place of `.`. For example, setting the environment variable `AERON_TERM_BUFFER_LENGTH` is equivalent
+to setting `aeron.term.buffer.length` in the Java media driver.
+
+## Operation
+
+The driver can be started simply by executing `aeronmd`.
+
+    $ aeronmd
+
+The driver can be stopped gracefully via `Control-C` or `SIGINT` just like the Java media driver.
+
+## Embedding the Driver
+
+The C media driver may be embedded quite easily. An example is the driver main itself, 
+[aeronmd.c](https://github.com/real-logic/aeron/blob/master/aeron-driver/src/main/c/aeronmd.c), and the API is documented in 
+[aeronmd.h](https://github.com/real-logic/aeron/blob/master/aeron-driver/src/main/c/aeronmd.h).
+
+## Driver Logging
+
+The C media driver uses DL interception for logging. To use this logging, add the
+Aeron C Driver Agent Library to `LD_PRELOAD` or `DYLD_INSERT_LIBRARIES` (for Mac.
+Also requires flat namespace) and set the environment variable, `AERON_EVENT_LOG`
+to a numeric mask for the events of interest. The following
+[script](https://github.com/real-logic/aeron/blob/master/aeron-samples/scripts/logging-c-media-driver)
+may be used for convenience.
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+include(CheckSymbolExists)
+include(CheckIncludeFile)
+include(CheckTypeSize)
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
+    add_definitions(-D_DEFAULT_SOURCE)
+endif ()
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+
+check_include_file("bsd/stdlib.h" BSDSTDLIB_H_EXISTS)
+check_include_file("uuid/uuid.h" UUID_H_EXISTS)
+find_library(LIBBSD_EXISTS NAMES bsd libbsd)
+find_library(LIBUUID_EXISTS NAMES uuid libuuid libuuid.dll)
+
+if (LIBBSD_EXISTS)
+    set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -lbsd")
+endif ()
+
+if (LIBUUID_EXISTS)
+    set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} -luuid")
+endif ()
+
+if (NOT BSDSTDLIB_H_EXISTS)
+    check_symbol_exists(arc4random "stdlib.h" ARC4RANDOM_PROTOTYPE_EXISTS)
+else ()
+    add_definitions(-DHAVE_BSDSTDLIB_H)
+    check_symbol_exists(arc4random "bsd/stdlib.h" ARC4RANDOM_PROTOTYPE_EXISTS)
+endif ()
+
+if (UUID_H_EXISTS)
+    add_definitions(-DHAVE_UUID_H)
+endif ()
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(AERON_LIB_WINSOCK_LIBS wsock32 ws2_32 Iphlpapi)
+    set(WSAPOLL_PROTOTYPE_EXISTS True)
+endif ()
+
+check_symbol_exists(uuid_generate "uuid/uuid.h" UUID_GENERATE_PROTOTYPE_EXISTS)
+
+check_symbol_exists(poll "poll.h" POLL_PROTOTYPE_EXISTS)
+check_symbol_exists(epoll_create "sys/epoll.h" EPOLL_PROTOTYPE_EXISTS)
+
+set(CMAKE_EXTRA_INCLUDE_FILES sys/socket.h)
+check_type_size("struct mmsghdr" STRUCT_MMSGHDR_TYPE_EXISTS)
+set(CMAKE_EXTRA_INCLUDE_FILES)
+
+check_symbol_exists(recvmmsg "sys/socket.h" RECVMMSG_PROTOTYPE_EXISTS)
+check_symbol_exists(sendmmsg "sys/socket.h" SENDMMSG_PROTOTYPE_EXISTS)
+check_symbol_exists(fallocate "fcntl.h" FALLOCATE_PROTOTYPE_EXISTS)
+
+if (ARC4RANDOM_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_ARC4RANDOM)
+else ()
+    message(WARNING "Could not find arc4random. If on Linux, is libbsd installed?")
+endif ()
+
+if (UUID_GENERATE_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_UUID_GENERATE)
+else ()
+    message(WARNING "Could not find uuid_generate. If on Linux, is libuuid installed?")
+endif ()
+
+if (POLL_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_POLL)
+endif ()
+
+if (EPOLL_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_EPOLL)
+endif ()
+
+if (WSAPOLL_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_WSAPOLL)
+endif ()
+
+if (NOT POLL_PROTOTYPE_EXISTS AND NOT EPOLL_PROTOTYPE_EXISTS AND NOT WSAPOLL_PROTOTYPE_EXISTS)
+    message(FATAL_ERROR "Unsupported configuration: neither POLL nor EPOLL nor WSAPoll found")
+endif ()
+
+if (STRUCT_MMSGHDR_TYPE_EXISTS)
+    add_definitions(-DHAVE_STRUCT_MMSGHDR)
+endif ()
+
+if (RECVMMSG_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_RECVMMSG)
+endif ()
+
+if (SENDMMSG_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_SENDMMSG)
+endif ()
+
+if (FALLOCATE_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_FALLOCATE)
+endif ()
+
+SET(C_CLIENT_SOURCE
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_array_to_ptr_hash_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_bit_set.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_counter_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_to_ptr_hash_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_to_tagged_ptr_hash_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_str_to_ptr_hash_map.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_atomic.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_broadcast_receiver.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_broadcast_transmitter.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_counters_manager.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_distinct_error_log.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_exclusive_term_appender.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_logbuffer_descriptor.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_mpsc_concurrent_array_queue.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_mpsc_rb.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_spsc_concurrent_array_queue.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_spsc_rb.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_appender.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_gap_filler.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_gap_scanner.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_rebuilder.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_scanner.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_unblocker.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_thread.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/status/aeron_local_sockaddr.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/protocol/aeron_udp_protocol.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/reports/aeron_loss_reporter.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_arrayutil.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_bitutil.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_clock.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_dlopen.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_env.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_error.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_fileutil.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_http_util.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_math.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_netutil.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_parse_util.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_properties_util.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_strutil.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/uri/aeron_uri.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_agent.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_alloc.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_client.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_client_conductor.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_cnc.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_cnc_file_descriptor.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_context.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_counter.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_exclusive_publication.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_fragment_assembler.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_image.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_log_buffer.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_publication.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_socket.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_subscription.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_version.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_windows.c
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeronc.c)
+
+set(C_CLIENT_HEADERS
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_array_to_ptr_hash_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_bit_set.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_counter_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_to_ptr_hash_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_int64_to_tagged_ptr_hash_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/collections/aeron_str_to_ptr_hash_map.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/command/aeron_control_protocol.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_atomic.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_atomic64_gcc_x86_64.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_atomic64_msvc.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_broadcast_descriptor.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_broadcast_receiver.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_broadcast_transmitter.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_concurrent_array_queue.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_counters_manager.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_distinct_error_log.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_exclusive_term_appender.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_logbuffer_descriptor.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_mpsc_concurrent_array_queue.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_mpsc_rb.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_rb.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_spsc_concurrent_array_queue.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_spsc_rb.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_appender.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_gap_filler.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_gap_scanner.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_rebuilder.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_scanner.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_term_unblocker.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/concurrent/aeron_thread.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/protocol/aeron_udp_protocol.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/reports/aeron_loss_reporter.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_arrayutil.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_bitutil.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_clock.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_dlopen.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_env.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_error.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_fileutil.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_http_util.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_math.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_netutil.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_parse_util.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_platform.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_properties_util.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/util/aeron_strutil.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_agent.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_alloc.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_client.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_client_conductor.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_cnc_file_descriptor.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_common.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_context.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_counter.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_exclusive_publication.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_fragment_assembler.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_image.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_log_buffer.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_publication.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_socket.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_subscription.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeron_windows.h
+    ${AERON_C_CLIENT_SOURCE_PATH}/aeronc.h)
+
+SET(SOURCE
+    ${C_CLIENT_SOURCE}
+    agent/aeron_driver_agent.c
+    concurrent/aeron_logbuffer_unblocker.c
+    media/aeron_receive_channel_endpoint.c
+    media/aeron_receive_destination.c
+    media/aeron_send_channel_endpoint.c
+    media/aeron_udp_channel.c
+    media/aeron_udp_channel_transport.c
+    media/aeron_udp_channel_transport_bindings.c
+    media/aeron_udp_channel_transport_loss.c
+    media/aeron_udp_destination_tracker.c
+    media/aeron_udp_transport_poller.c
+    uri/aeron_driver_uri.c
+    aeron_congestion_control.c
+    aeron_csv_table_name_resolver.c
+    aeron_data_packet_dispatcher.c
+    aeron_driver.c
+    aeron_driver_conductor.c
+    aeron_driver_conductor_proxy.c
+    aeron_driver_context.c
+    aeron_driver_name_resolver.c
+    aeron_driver_receiver.c
+    aeron_driver_receiver_proxy.c
+    aeron_driver_sender.c
+    aeron_driver_sender_proxy.c
+    aeron_flow_control.c
+    aeron_ipc_publication.c
+    aeron_loss_detector.c
+    aeron_min_flow_control.c
+    aeron_name_resolver.c
+    aeron_name_resolver_cache.c
+    aeron_network_publication.c
+    aeron_position.c
+    aeron_publication_image.c
+    aeron_retransmit_handler.c
+    aeron_system_counters.c
+    aeron_termination_validator.c)
+
+SET(HEADERS
+    ${C_CLIENT_HEADERS}
+    agent/aeron_driver_agent.h
+    concurrent/aeron_logbuffer_unblocker.h
+    media/aeron_receive_channel_endpoint.h
+    media/aeron_receive_destination.h
+    media/aeron_send_channel_endpoint.h
+    media/aeron_udp_channel.h
+    media/aeron_udp_channel_transport.h
+    media/aeron_udp_channel_transport_bindings.h
+    media/aeron_udp_channel_transport_loss.h
+    media/aeron_udp_destination_tracker.h
+    media/aeron_udp_transport_poller.h
+    uri/aeron_driver_uri.h
+    aeron_congestion_control.h
+    aeron_data_packet_dispatcher.h
+    aeron_driver.h
+    aeron_driver_common.h
+    aeron_driver_conductor.h
+    aeron_driver_conductor_proxy.h
+    aeron_driver_context.h
+    aeron_driver_name_resolver.h
+    aeron_driver_receiver.h
+    aeron_driver_receiver_proxy.h
+    aeron_driver_sender.h
+    aeron_driver_sender_proxy.h
+    aeron_flow_control.h
+    aeron_ipc_publication.h
+    aeron_loss_detector.h
+    aeron_name_resolver.h
+    aeron_name_resolver_cache.h
+    aeron_network_publication.h
+    aeron_position.h
+    aeron_publication_image.h
+    aeron_retransmit_handler.h
+    aeron_system_counters.h
+    aeron_termination_validator.h
+    aeronmd.h)
+
+add_library(aeron_driver SHARED ${SOURCE} ${HEADERS})
+target_include_directories(aeron_driver
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${AERON_C_CLIENT_SOURCE_PATH}
+    )
+
+add_library(aeron_driver_static STATIC ${SOURCE} ${HEADERS})
+target_include_directories(aeron_driver_static
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${AERON_C_CLIENT_SOURCE_PATH}
+    )
+
+add_executable(aeronmd aeronmd.c)
+target_include_directories(aeronmd
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${AERON_C_CLIENT_SOURCE_PATH}
+    )
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -DDISABLE_BOUNDS_CHECKS")
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    if (LIBBSD_EXISTS)
+        set(AERON_LIB_BSD_LIBS bsd)
+    endif ()
+
+    if (LIBUUID_EXISTS)
+        set(AERON_LIB_UUID_LIBS uuid)
+    endif ()
+
+    set(AERON_LIB_M_LIBS m)
+endif ()
+
+if (CYGWIN)
+    if (LIBUUID_EXISTS)
+        set(AERON_LIB_UUID_LIBS uuid)
+    endif ()
+endif ()
+
+target_link_libraries(
+    aeron_driver
+    ${CMAKE_DL_LIBS}
+    ${AERON_LIB_BSD_LIBS}
+    ${AERON_LIB_UUID_LIBS}
+    ${AERON_LIB_M_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${AERON_LIB_WINSOCK_LIBS})
+
+target_link_libraries(
+    aeronmd
+    aeron_driver
+    ${CMAKE_DL_LIBS}
+    ${AERON_LIB_BSD_LIBS}
+    ${AERON_LIB_UUID_LIBS}
+    ${AERON_LIB_M_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${AERON_LIB_WINSOCK_LIBS})
+
+target_compile_definitions(aeron_driver PRIVATE -DAERON_DRIVER)
+target_compile_definitions(aeron_driver_static PRIVATE -DAERON_DRIVER)
+
+if (AERON_INSTALL_TARGETS)
+    install(
+        TARGETS aeron_driver aeron_driver_static
+        RUNTIME DESTINATION lib
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+    install(TARGETS aeronmd DESTINATION bin)
+    install(DIRECTORY . DESTINATION include/aeronmd FILES_MATCHING PATTERN "*.h")
+endif ()
+Aeron Archive
+===
+
+[![Javadocs](http://www.javadoc.io/badge/io.aeron/aeron-all.svg)](http://www.javadoc.io/doc/io.aeron/aeron-all)
+
+The aeron-archive is a module which enables Aeron data stream recording and replay from durable storage. 
+
+Samples can be found [here](https://github.com/real-logic/aeron/blob/master/aeron-samples/scripts/archive/README.md) and
+systems tests [here](https://github.com/real-logic/aeron/tree/master/aeron-system-tests/src/test/java/io/aeron/archive).
+
+Features:
+
+- **Record:** service can record a particular subscription, described by `<channel, streamId>`. Each resulting image
+ for the subscription will be recorded under a new `recordingId`. Local network publications are recorded using the spy
+ feature for efficiency. If no subscribers are active then the recording can advance the stream by setting the
+ `aeron.spies.simulate.connection` system property to true.
+
+- **Extend:** service can extend an existing recording by appending.
+
+- **Replay:** service can replay a recorded `recordingId` from a particular `position`, and for a particular `length`
+ which can be `Aeron.NULL_VALUE` for an open-ended replay. An open-ended replay will stop when it reaches the stop
+ position of a recording.
+
+- **Query:** the catalog for existing recordings, and the recorded position of an active recording.
+
+- **Truncate:** allows a stopped recording to have its length truncated, and if truncated to the start position then it
+ is effectively deleted.
+
+- **Replay Merge:** allows a late joining subscriber of a recorded stream to replay a recording and then merge with the
+ live stream for cut over if the consumer is fast enough to keep up.
+
+- **Replicate:** recordings can be replicated from a source to destination archive with the option to follow on with
+ a live stream when the source is multicast. When using replication it is necessary to configure the replication channel
+ for the destination archive with `aeron.archive.replication.channel`.
+
+- **Recording Storage Maintenance:** Manage the storage of large recordings by performing purge, detach, and delete
+ operations, plus the ability to attach and migrate segments at the beginning of recordings. 
+
+Usage
+=====
+
+Protocol
+=====
+Messages specification use SBE [aeron-archive-codecs.xml](https://github.com/real-logic/aeron/blob/master/aeron-archive/src/main/resources/archive/aeron-archive-codecs.xml).
+The Archive communicates via the following interfaces:
+
+ - **Recording Events stream:** other parties can subscribe to events for the start,
+ stop, and progress of recordings. These are the recording events messages specified in the codec.
+ 
+ - **Control Request stream:** this allows clients to initiate replay or queries interactions with the archive.
+ Requests have a correlationId sent on the initiating request. The `correlationId` is expected to be managed by
+ the clients and is offered as a means for clients to track multiple concurrent requests. A request will typically
+ involve the archive sending data back on the reply channel specified by the client on the `ConnectRequest`.
+
+A control session can be established with the Archive after a `ConnectRequest`. Operations happen within
+the context of such a ControlSession which is allocated a `controlSessionId`.
+
+Recording Progress Events
+----
+Aeron clients wishing to observe the Archive recordings lifecycle can do so by subscribing to the recording events
+channel. The messages are described in the codec. To fully capture the state of the Archive a client could subscribe
+to these events as well as query for the full list of descriptors.
+
+Recording Signal Events
+----
+On a control session signals can be tracked for when a recording starts and stop plus other operations like extend,
+replicate, and live merge.
+
+Recording Durability
+----
+An archive can be instructed to record streams, i.e. `<channel, streamId>` pairs. These streams are recorded with the
+file sync level the archive has been launched with. Progress is reported on the recording events stream.
+
+- `aeron.archive.file.sync.level=0`: for normal writes to the OS page cache for background writing to disk.
+- `aeron.archive.file.sync.level=1`: for forcing the dirty data pages to disk. 
+- `aeron.archive.file.sync.level=2`: for forcing the dirty data pages and file metadata to disk.
+
+When setting file sync level greater than zero it is also important to sync the archive catalog with the
+ `aeron.archive.catalog.file.sync.level` to the same value.
+
+Recordings will be assigned a `recordingId` and a full description of the stream is captured in the Archive Catalog.
+The Catalog chronicles the contents of an archive as `RecordingDescriptor`s which can be queried.
+
+The progress of active recordings can be tracked using `AeronStat` to view the `rec-pos` counter for each stream.
+
+Persisted Format
+=====
+The Archive is backed by 3 file types, all of which are expected to reside in the `archiveDir`.
+
+ -  **Catalog (one per archive):** The catalog contains fixed length (1k) records of recording
+ descriptors. The descriptors can be queried as described above. Each descriptor entry is 1k aligned,
+ and as the `recordingId` is a simple sequence, this means lookup is a dead reckoning operation.
+ Each entry has a header (32 bytes) followed by the RecordingDescriptor, the header contains the encoded
+ length of the RecordingDescriptor. See the codec schema for full descriptor details.
+ 
+ - **Recording Segment Files (many per recorded stream):** This is where the recorded data is kept.
+ Recording segments follow the naming convention of: `<recordingId>-<segment base position>.rec`
+ The Archive copies data as is from the recorded Image. As such the files follow the same convention
+ as Aeron data streams. Data starts at `startPosition`, which translates into the offset
+ `startPosition % termBufferLength` in the first segment file. From there one can read fragments
+ as described by the `DataHeaderFlyweight` up to the `stopPosition`. Segment length is a multiple of `termBufferLength`.
+ 
+  - **Mark File:** This file contains the archive distinct error log and heartbeat timestamp to ensure two or more
+ archives do not run in the same directory.
+
+Migration
+=====
+The Archive may need to be migrated between major versions. This migration will be evident if attempting
+to run `CatalogTool` with the `describe` command on the archive directory. A previous version will
+only be readable by a previous version of `CatalogTool`. To migrate the archive, please follow
+the steps below.
+
+- Shutdown the Archive and ensure all recordings have a stop position.
+- Take a backup of the Archive directory.
+- Run `CatalogTool` command `migrate`. Information on versions, etc. will be displayed. Errors
+will also be displayed.
+- Run `CatalogTool` command `verify` to check for validity.
+
+This is a list of Version that require migration are below.
+
+- Version previous to 1.0.0 must migrate due to the segment file name change.
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+find_package(Java REQUIRED)
+
+add_definitions(-DAERON_ALL_JAR="${AERON_ALL_JAR}")
+add_definitions(-DJAVA_EXECUTABLE="${Java_JAVA_EXECUTABLE}")
+add_definitions(-DARCHIVE_DIR="${CMAKE_CURRENT_BINARY_DIR}/archive")
+add_definitions(-DJAVA_MAJOR_VERSION=${Java_VERSION_MAJOR})
+add_definitions(-DJAVA_MINOR_VERSION=${Java_VERSION_MINOR})
+
+SET(SOURCE ArchiveTestUtil.cpp)
+SET(HEADERS ArchiveTestUtil.h)
+
+
+function(aeron_archive_client_test name file)
+    add_executable(${name} ${file} ${SOURCE} ${HEADERS})
+    target_include_directories(${name} PUBLIC ${AERON_CLIENT_SOURCE_PATH})
+    target_include_directories(${name} PUBLIC ${AERON_ARCHIVE_SOURCE_PATH})
+    target_link_libraries(${name} aeron_client aeron_archive_client ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    add_dependencies(${name} gmock aeron-all-jar)
+    add_test(NAME ${name} COMMAND ${name})
+
+    set(wrapper_name "${name}W")
+    add_executable(${wrapper_name} ${file} ${SOURCE} ${HEADERS})
+    target_include_directories(${wrapper_name} PUBLIC ${AERON_C_CLIENT_SOURCE_PATH})
+    target_include_directories(${wrapper_name} PUBLIC ${AERON_CLIENT_WRAPPER_SOURCE_PATH})
+    target_include_directories(${wrapper_name} PUBLIC ${AERON_ARCHIVE_SOURCE_PATH})
+    target_link_libraries(${wrapper_name} aeron_client_wrapper aeron_archive_client_wrapper ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    add_dependencies(${wrapper_name} gmock aeron-all-jar)
+    add_test(NAME ${wrapper_name} COMMAND ${name})
+endfunction()
+
+aeron_archive_client_test(archiveTest AeronArchiveTest.cpp)
+set_tests_properties(archiveTest PROPERTIES RUN_SERIAL TRUE)
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+find_package(Java REQUIRED)
+
+set(CODEC_SCHEMA ${ARCHIVE_CODEC_SCHEMA_DIR}/aeron-archive-codecs.xml)
+set(GENERATED_CODECS
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/BoundedReplayRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ControlResponse.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ConnectRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/CloseSessionRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StartRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StartRecordingRequest2.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopRecordingByIdentityRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ReplayRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopReplayRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopAllReplaysRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ListRecordingsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ListRecordingsForUriRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ListRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ExtendRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ExtendRecordingRequest2.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingPositionRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/TruncateRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/PurgeRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopRecordingSubscriptionRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StartPositionRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/StopPositionRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/FindLastMatchingRecordingRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ListRecordingSubscriptionsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/ReplicateRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/TaggedReplicateRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/DetachSegmentsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/DeleteDetachedSegmentsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/PurgeSegmentsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/AttachSegmentsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/MigrateSegmentsRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/KeepAliveRequest.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/CatalogHeader.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingDescriptorHeader.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingDescriptor.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingSubscriptionDescriptor.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingStarted.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingProgress.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingStopped.h
+    ${ARCHIVE_CODEC_TARGET_DIR}/aeron_archive_client/RecordingSignalEvent.h)
+
+add_custom_command(OUTPUT ${GENERATED_CODECS}
+    COMMAND ${GRADLE_WRAPPER} -Dcodec.target.dir=${ARCHIVE_CODEC_TARGET_DIR} :aeron-archive:generateCppCodecs --no-daemon --console=plain -q
+    DEPENDS ${CODEC_SCHEMA} aeron-all-jar
+    WORKING_DIRECTORY ${ARCHIVE_CODEC_WORKING_DIR}
+    COMMENT "Generating C++ Archive codecs")
+
+add_custom_target(codecs DEPENDS ${GENERATED_CODECS})
+
+SET(SOURCE
+    client/ArchiveProxy.cpp
+    client/ControlResponsePoller.cpp
+    client/ControlResponseAdapter.cpp
+    client/RecordingDescriptorPoller.cpp
+    client/RecordingSubscriptionDescriptorPoller.cpp
+    client/RecordingEventsPoller.cpp
+    client/RecordingEventsAdapter.cpp
+    client/RecordingSignalAdapter.cpp
+    client/AeronArchive.cpp
+    client/ReplayMerge.cpp)
+
+SET(HEADERS
+    client/ArchiveException.h
+    client/ArchiveConfiguration.h
+    client/ArchiveProxy.h
+    client/ControlResponsePoller.h
+    client/ControlResponseAdapter.h
+    client/RecordingDescriptorPoller.h
+    client/RecordingSubscriptionDescriptorPoller.h
+    client/RecordingEventsPoller.h
+    client/RecordingEventsAdapter.h
+    client/RecordingSignalAdapter.h
+    client/RecordingPos.h
+    client/AeronArchive.h
+    client/ReplayMerge.h)
+
+# static library
+add_library(aeron_archive_client STATIC ${SOURCE} ${HEADERS})
+add_library(aeron_archive_client_wrapper STATIC ${SOURCE} ${HEADERS})
+
+add_dependencies(aeron_archive_client codecs)
+add_dependencies(aeron_archive_client_wrapper codecs)
+
+target_include_directories(aeron_archive_client
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${ARCHIVE_CODEC_TARGET_DIR})
+
+target_include_directories(aeron_archive_client_wrapper
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${ARCHIVE_CODEC_TARGET_DIR})
+
+if (NOT WIN32)
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+endif ()
+
+target_link_libraries(aeron_archive_client
+    PRIVATE aeron_client
+    INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+
+target_link_libraries(aeron_archive_client_wrapper
+    PRIVATE aeron_client_wrapper aeron
+    INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+
+if (AERON_INSTALL_TARGETS)
+    install(TARGETS aeron_archive_client ARCHIVE DESTINATION lib)
+    install(DIRECTORY . DESTINATION include FILES_MATCHING PATTERN "*.h")
+endif ()
+Aeron System Tests
+===
+
+[![Javadocs](http://www.javadoc.io/badge/io.aeron/aeron-all.svg)](http://www.javadoc.io/doc/io.aeron/aeron-all)
+
+System tests which exercise end-to-end features of Aeron that act as acceptance tests for CI.if (AERON_SYSTEM_TESTS)
+    add_test(
+        NAME java_system_tests_c_media_driver
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMAND ${GRADLE_WRAPPER} -Daeron.test.system.aeronmd.path=$<TARGET_FILE:aeronmd> :aeron-system-tests:cleanTest :aeron-system-tests:test --no-daemon)
+    set_tests_properties(java_system_tests_c_media_driver PROPERTIES RUN_SERIAL TRUE)
+endif ()
+
+if (AERON_SLOW_SYSTEM_TESTS)
+    add_test(
+        NAME java_slow_system_tests_c_media_driver
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMAND ${GRADLE_WRAPPER} -Daeron.test.system.aeronmd.path=$<TARGET_FILE:aeronmd> :aeron-system-tests:cleanSlowTest :aeron-system-tests:slowTest --no-daemon)
+    set_tests_properties(java_slow_system_tests_c_media_driver PROPERTIES RUN_SERIAL TRUE)
+endif ()
+Aeron Client
+===
+
+[![Javadocs](http://www.javadoc.io/badge/io.aeron/aeron-all.svg)](http://www.javadoc.io/doc/io.aeron/aeron-all)
+
+Aeron clients are used to communicate to the media driver for the publishing of messages via publications and consuming messages of replicated publication images via subscriptions.
+
+Clients communicate over IPC to the media driver thus allowing the media driver to run out of process and be in a different language to the clients.#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+set(TEST_HEADERS
+    ClientConductorFixture.h
+    EmbeddedMediaDriver.h
+    util/TestUtils.h
+    concurrent/MockAtomicBuffer.h)
+
+set(TEST_SOURCE
+    ClientConductorFixture.cpp
+    concurrent/MockAtomicBuffer.cpp)
+
+add_library(aeron_client_test STATIC ${TEST_SOURCE} ${TEST_HEADERS})
+target_include_directories(aeron_client_test
+    PUBLIC ${AERON_CLIENT_TEST_PATH})
+target_link_libraries(aeron_client_test aeron_client)
+target_compile_definitions(aeron_client_test PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+add_dependencies(aeron_client_test gmock)
+
+if (MSVC AND ${CMAKE_VERSION} VERSION_LESS "3.13.0")
+    target_compile_definitions(aeron_client_test PUBLIC "MSVC_FILE_IS_LOWER_CASE")
+endif ()
+
+function(aeron_client_test name file)
+    add_executable(${name} ${file})
+    target_link_libraries(${name} aeron_client aeron_driver aeron_client_test ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    target_compile_definitions(${name} PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    add_dependencies(${name} gmock)
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
+aeron_client_test(clientConductorTest ClientConductorTest.cpp)
+aeron_client_test(publicationTest PublicationTest.cpp)
+aeron_client_test(exclusivePublicationTest ExclusivePublicationTest.cpp)
+aeron_client_test(imageTest ImageTest.cpp)
+aeron_client_test(fragmentAssemblyTest FragmentAssemblerTest.cpp)
+aeron_client_test(commandTest command/CommandTest.cpp)
+aeron_client_test(utilTest util/UtilTest.cpp)
+aeron_client_test(memoryMappedFileTest util/MemoryMappedFileTest.cpp)
+aeron_client_test(broadcastReceiverTest concurrent/BroadcastReceiverTest.cpp)
+aeron_client_test(broadcastTransmitterTest concurrent/BroadcastTransmitterTest.cpp)
+aeron_client_test(concurrentTest concurrent/ConcurrentTest.cpp)
+aeron_client_test(countersManagerTest concurrent/CountersManagerTest.cpp)
+aeron_client_test(termAppenderTest concurrent/TermAppenderTest.cpp)
+aeron_client_test(termReaderTest concurrent/TermReaderTest.cpp)
+aeron_client_test(termBlockScannerTest concurrent/TermBlockScannerTest.cpp)
+aeron_client_test(termGapScannerTest concurrent/TermGapScannerTest.cpp)
+aeron_client_test(termScannerTest concurrent/TermScannerTest.cpp)
+aeron_client_test(manyToOneRingBufferTest concurrent/ManyToOneRingBufferTest.cpp)
+aeron_client_test(distinctErrorLogTest concurrent/DistinctErrorLogTest.cpp)
+aeron_client_test(errorLogReaderTest concurrent/ErrorLogReaderTest.cpp)
+aeron_client_test(oneToOneRingBufferTest concurrent/OneToOneRingBufferTest.cpp)
+aeron_client_test(channelUriStringBuilderTest ChannelUriStringBuilderTest.cpp)
+aeron_client_test(channelUriTest ChannelUriTest.cpp)
+#aeron_client_test(systemTest SystemTest.cpp)
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+set(TEST_HEADERS
+    EmbeddedMediaDriver.h
+    TestUtil.h)
+
+if (MSVC AND ${CMAKE_VERSION} VERSION_LESS "3.13.0")
+    target_compile_definitions(aeron_client_test PUBLIC "MSVC_FILE_IS_LOWER_CASE")
+endif ()
+
+function(aeron_client_native_test name file)
+    add_executable(${name} ${file} ${TEST_HEADERS})
+    target_link_libraries(${name} aeron_client aeron_driver ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    target_compile_definitions(${name} PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    add_dependencies(${name} gmock)
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
+function(aeron_client_wrapper_test name file)
+    set(wrapper_name "${name}W")
+    add_executable(${wrapper_name} ${file} ${TEST_HEADERS})
+    target_link_libraries(${wrapper_name} aeron_client_wrapper aeron_driver ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    target_compile_definitions(${wrapper_name} PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    add_dependencies(${wrapper_name} gmock)
+    add_test(NAME ${wrapper_name} COMMAND ${wrapper_name})
+endfunction()
+
+aeron_client_wrapper_test(systemTest SystemTest.cpp)
+aeron_client_native_test(systemTest SystemTest.cpp)
+
+aeron_client_wrapper_test(pubSubTest PubSubTest.cpp)
+aeron_client_native_test(pubSubTest PubSubTest.cpp)
+
+aeron_client_wrapper_test(countersTest CountersTest.cpp)
+aeron_client_native_test(countersTest CountersTest.cpp)
+
+aeron_client_wrapper_test(imagePollTest ImageTest.cpp)
+aeron_client_native_test(imagePollTest ImageTest.cpp)
+
+aeron_client_wrapper_test(localAddresses LocalAddressesTest.cpp)
+aeron_client_native_test(localAddresses LocalAddressesTest.cpp)
+
+aeron_client_wrapper_test(multiDestinationCast MultiDestinationTest.cpp)
+aeron_client_native_test(multiDestinationCast MultiDestinationTest.cpp)
+
+aeron_client_wrapper_test(livenessTimeoutTest LivenessTimeoutTest.cpp)
+aeron_client_native_test(livenessTimeoutTest LivenessTimeoutTest.cpp)
+
+aeron_client_wrapper_test(exceptionsTest ExceptionsTest.cpp)
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(AERON_LIB_WINSOCK_LIBS wsock32 ws2_32 Iphlpapi)
+endif ()
+
+include_directories(${AERON_C_CLIENT_SOURCE_PATH})
+
+set(TEST_HEADERS
+    aeron_client_test_utils.h)
+
+function(aeron_c_client_test name file)
+    add_executable(${name} ${file} ${TEST_HEADERS})
+    target_link_libraries(${name} aeron ${GMOCK_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${AERON_LIB_WINSOCK_LIBS})
+    target_compile_definitions(${name} PUBLIC "_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+    add_dependencies(${name} gmock)
+    add_test(NAME ${name} COMMAND ${name})
+endfunction()
+
+aeron_c_client_test(array_to_ptr_hash_map_test collections/aeron_array_to_ptr_hash_map_test.cpp)
+aeron_c_client_test(int64_to_ptr_hash_map_test collections/aeron_int64_to_ptr_hash_map_test.cpp)
+aeron_c_client_test(int64_counter_map_test collections/aeron_int64_counter_map_test.cpp)
+aeron_c_client_test(int64_to_tagged_ptr_hash_map_test collections/aeron_int64_to_tagged_ptr_hash_map_test.cpp)
+aeron_c_client_test(str_to_ptr_hash_map_test collections/aeron_str_to_ptr_hash_map_test.cpp)
+aeron_c_client_test(bit_set_test collections/aeron_bit_set_test.cpp)
+aeron_c_client_test(spsc_rb_test concurrent/aeron_spsc_rb_test.cpp)
+aeron_c_client_test(mpsc_rb_test concurrent/aeron_mpsc_rb_test.cpp)
+aeron_c_client_test(broadcast_receiver_test concurrent/aeron_broadcast_receiver_test.cpp)
+aeron_c_client_test(broadcast_transmitter_test concurrent/aeron_broadcast_transmitter_test.cpp)
+aeron_c_client_test(distinct_error_log_test concurrent/aeron_distinct_error_log_test.cpp)
+aeron_c_client_test(spsc_concurrent_array_queue_test concurrent/aeron_spsc_concurrent_array_queue_test.cpp)
+aeron_c_client_test(mpsc_concurrent_array_queue_test concurrent/aeron_mpsc_concurrent_array_queue_test.cpp)
+aeron_c_client_test(term_appender_test concurrent/aeron_term_appender_test.cpp)
+aeron_c_client_test(counters_test concurrent/aeron_counters_test.cpp)
+aeron_c_client_test(exclusive_term_appender_test concurrent/aeron_exclusive_term_appender_test.cpp)
+aeron_c_client_test(client_conductor_test aeron_client_conductor_test.cpp)
+aeron_c_client_test(subscription_test aeron_subscription_test.cpp)
+aeron_c_client_test(image_test aeron_image_test.cpp)
+aeron_c_client_test(fragment_assembler_test aeron_fragment_assembler_test.cpp)
+aeron_c_client_test(aeron_fileutil_test util/aeron_fileutil_test.cpp)
+aeron_c_client_test(uri_test aeron_uri_test.cpp)
+aeron_c_client_test(bitutil_test util/aeron_bitutil_test.cpp)
+aeron_c_client_test(fileutil_test util/aeron_fileutil_test.cpp)
+aeron_c_client_test(math_test util/aeron_math_test.cpp)
+aeron_c_client_test(strutil_test util/aeron_strutil_test.cpp)
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+
+SET(SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Publication.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExclusivePublication.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Subscription.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ClientConductor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Aeron.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LogBuffers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Counter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/MemoryMappedFile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOption.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOptionParser.cpp)
+
+SET(HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Aeron.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BufferBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ChannelUri.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ChannelUriStringBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ClientConductor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CncFileDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Context.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ControlledFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Counter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DriverListenerAdapter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DriverProxy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExclusivePublication.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/FragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Image.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HeartbeatTimestamp.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImageControlledFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImageFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/LogBuffers.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Publication.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Subscription.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/ImageMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/ImageBuffersReadyFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/ControlProtocolEvents.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/CorrelatedMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/ErrorResponseFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/Flyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/PublicationMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/PublicationBuffersReadyFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/RemoveMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/SubscriptionMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/DestinationMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/SubscriptionReadyFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/OperationSucceededFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/CounterMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/CounterUpdateFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/ClientTimeoutFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/command/TerminateDriverFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AgentRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AgentInvoker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/Atomic64.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicBuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicCounter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/BusySpinIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/CountersManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/CountersReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/NoOpIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/SleepingIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/YieldingIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/BackOffIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_gcc_cpp11.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_gcc_x86_64.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_msvc.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/broadcast/BroadcastBufferDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/broadcast/BroadcastReceiver.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/broadcast/BroadcastTransmitter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/broadcast/CopyBroadcastReceiver.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/broadcast/RecordDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/errors/ErrorLogDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/errors/ErrorLogReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/errors/DistinctErrorLog.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/BufferClaim.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/DataFrameHeader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/FrameDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/Header.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/HeaderWriter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermAppender.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/LogBufferDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermRebuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermGapScanner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermBlockScanner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermScanner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/ExclusiveTermAppender.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/ringbuffer/ManyToOneRingBuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/ringbuffer/RecordDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/ringbuffer/RingBufferDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/ringbuffer/OneToOneRingBuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/LocalSocketAddressStatus.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/ReadablePosition.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/Position.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/UnsafeBufferPosition.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/StatusIndicatorReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/reports/LossReportDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/reports/LossReportReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicArrayUpdater.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol/HeaderFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol/NakFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol/StatusMessageFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol/SetupFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/protocol/DataHeaderFlyweight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/MemoryMappedFile.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOption.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOptionParser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/StringUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Exceptions.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/LangUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/MacroUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ScopeUtils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/BitUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Index.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Platform.h)
+
+# static library
+add_library(aeron_client STATIC ${SOURCE} ${HEADERS})
+add_library(aeron_client_shared SHARED ${SOURCE} ${HEADERS})
+
+target_include_directories(aeron_client
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+target_include_directories(aeron_client_shared
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+if (MSVC)
+    string(REPLACE "/" "\\\\" NATIVE_PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+    if (${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        string(TOLOWER "${NATIVE_PROJECT_SOURCE_DIR}" NATIVE_PROJECT_SOURCE_DIR)
+    endif ()
+else ()
+    set(NATIVE_PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+endif ()
+
+target_compile_definitions(aeron_client
+    PUBLIC $<$<NOT:$<CONFIG:Debug>>:DISABLE_BOUNDS_CHECKS>
+    # relative file paths for use in exceptions
+    PUBLIC "__PROJECT_SOURCE_DIR__=\"${NATIVE_PROJECT_SOURCE_DIR}\""
+    )
+
+target_compile_definitions(aeron_client_shared
+    PUBLIC $<$<NOT:$<CONFIG:Debug>>:DISABLE_BOUNDS_CHECKS>
+    # relative file paths for use in exceptions
+    PUBLIC "__PROJECT_SOURCE_DIR__=\"${NATIVE_PROJECT_SOURCE_DIR}\""
+    PUBLIC CLIENT_SHARED DLL_EXPORT
+    )
+
+if (NOT WIN32)
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+endif ()
+
+target_link_libraries(aeron_client
+    INTERFACE ${CMAKE_THREAD_LIBS_INIT}
+    )
+
+target_link_libraries(aeron_client_shared
+    INTERFACE ${CMAKE_THREAD_LIBS_INIT}
+    )
+
+if (AERON_INSTALL_TARGETS)
+    install(TARGETS aeron_client_shared aeron_client
+        RUNTIME DESTINATION lib
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+    install(DIRECTORY . DESTINATION include FILES_MATCHING PATTERN "*.h")
+endif ()
+#
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+
+SET(HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/Aeron.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BufferBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ChannelUri.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ChannelUriStringBuilder.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CncFileDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Context.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ControlledFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Counter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExclusivePublication.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/FragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HeartbeatTimestamp.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Image.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImageControlledFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImageFragmentAssembler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Publication.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Subscription.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AgentRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AgentInvoker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/Atomic64.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicBuffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicCounter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/BusySpinIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/CountersReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/NoOpIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/SleepingIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/YieldingIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/BackOffIdleStrategy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_gcc_cpp11.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_gcc_x86_64.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/atomic/Atomic64_msvc.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/BufferClaim.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/DataFrameHeader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/FrameDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/Header.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/HeaderWriter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermAppender.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/LogBufferDescriptor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/logbuffer/TermReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/ReadablePosition.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/Position.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/UnsafeBufferPosition.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/status/StatusIndicatorReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concurrent/AtomicArrayUpdater.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOption.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/CommandOptionParser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/StringUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Exceptions.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/LangUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/MacroUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/ScopeUtils.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/BitUtil.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Index.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/Platform.h)
+
+# header only library
+add_library(aeron_client_wrapper INTERFACE)
+target_include_directories(aeron_client_wrapper INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_sources(aeron_client_wrapper INTERFACE ${HEADERS})
+
+if (MSVC)
+    string(REPLACE "/" "\\\\" NATIVE_PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+    if (${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        string(TOLOWER "${NATIVE_PROJECT_SOURCE_DIR}" NATIVE_PROJECT_SOURCE_DIR)
+    endif ()
+else ()
+    set(NATIVE_PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+endif ()
+
+if (NOT WIN32)
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+endif ()
+
+target_link_libraries(aeron_client_wrapper INTERFACE ${CMAKE_THREAD_LIBS_INIT})
+
+if (AERON_INSTALL_TARGETS)
+   install(DIRECTORY . DESTINATION include/wrapper FILES_MATCHING PATTERN "*.h")
+endif ()
+# C API
+
+Here you will find the source for the C API for Aeron. The build process builds
+a library for the client and places it in the following location
+
+    ${CMAKE_CURRENT_BINARY_DIR}/lib/libaeron.so or libaeron.dylib
+
+## Dependencies
+
+The C API library requires the following dependencies.
+
+- Aeron C API Library, source of which is included here and built and placed in `${CMAKE_CURRENT_BINARY_DIR}/lib`
+- Linux Dependencies:
+    - C Library (for the system built on)
+    - `-lpthread` - pthread Library
+    - `-ldl` - DL Library
+    - `-lm` - Math Library
+- Windows Dependencies:
+	- Windows Version >= Vista 
+	- MSVC >= v141 (Visual Studio 2017)
+
+## Documentation and Samples
+
+The C API has a single header that contains the API documentation 
+[here](https://github.com/real-logic/aeron/blob/master/aeron-client/src/main/c/aeronc.h)
+
+The System Tests for the API and the C driver can be found 
+[here](https://github.com/real-logic/aeron/blob/master/aeron-driver/src/test/c/aeron_c_system_test.cpp).
+	
+Samples of usage of the C API are in development.
+	
+## Configuration
+
+Configuration for the C API can be done programmatically and/or via environment variables. The variables are directly related to the Java properties
+for the Java API. The environment variables simply have `_` in the place of `.`. For example, setting the environment variable `AERON_DIR` is equivalent
+to setting `aeron.dir` in the Java API.
+# Copyright 2014-2020 Real Logic Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    set(BUILD_SHARED_LIBS ON)
+endif ()
+
+if (MSVC AND "${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+    set(AERON_LIB_WINSOCK_LIBS wsock32 ws2_32 Iphlpapi)
+    set(WSAPOLL_PROTOTYPE_EXISTS True)
+endif ()
+
+if (WSAPOLL_PROTOTYPE_EXISTS)
+    add_definitions(-DHAVE_WSAPOLL)
+endif ()
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
+    add_definitions(-D_DEFAULT_SOURCE)
+endif ()
+
+set(SOURCE
+    collections/aeron_array_to_ptr_hash_map.c
+    collections/aeron_bit_set.c
+    collections/aeron_int64_counter_map.c
+    collections/aeron_int64_to_ptr_hash_map.c
+    collections/aeron_int64_to_tagged_ptr_hash_map.c
+    collections/aeron_map.c
+    collections/aeron_str_to_ptr_hash_map.c
+    concurrent/aeron_atomic.c
+    concurrent/aeron_broadcast_receiver.c
+    concurrent/aeron_broadcast_transmitter.c
+    concurrent/aeron_counters_manager.c
+    concurrent/aeron_distinct_error_log.c
+    concurrent/aeron_exclusive_term_appender.c
+    concurrent/aeron_logbuffer_descriptor.c
+    concurrent/aeron_mpsc_concurrent_array_queue.c
+    concurrent/aeron_mpsc_rb.c
+    concurrent/aeron_spsc_concurrent_array_queue.c
+    concurrent/aeron_spsc_rb.c
+    concurrent/aeron_term_appender.c
+    concurrent/aeron_term_gap_filler.c
+    concurrent/aeron_term_gap_scanner.c
+    concurrent/aeron_term_rebuilder.c
+    concurrent/aeron_term_scanner.c
+    concurrent/aeron_term_unblocker.c
+    concurrent/aeron_thread.c
+    protocol/aeron_udp_protocol.c
+    reports/aeron_loss_reporter.c
+    status/aeron_local_sockaddr.c
+    util/aeron_arrayutil.c
+    util/aeron_bitutil.c
+    util/aeron_clock.c
+    util/aeron_dlopen.c
+    util/aeron_env.c
+    util/aeron_error.c
+    util/aeron_fileutil.c
+    util/aeron_http_util.c
+    util/aeron_math.c
+    util/aeron_netutil.c
+    util/aeron_parse_util.c
+    util/aeron_properties_util.c
+    util/aeron_strutil.c
+    uri/aeron_uri.c
+    aeron_agent.c
+    aeron_alloc.c
+    aeron_client.c
+    aeron_client_conductor.c
+    aeron_cnc.c
+    aeron_cnc_file_descriptor.c
+    aeron_context.c
+    aeron_counter.c
+    aeron_exclusive_publication.c
+    aeron_fragment_assembler.c
+    aeron_image.c
+    aeron_log_buffer.c
+    aeron_publication.c
+    aeron_socket.c
+    aeron_subscription.c
+    aeron_version.c
+    aeron_windows.c
+    aeronc.c
+    )
+
+set(HEADERS
+    collections/aeron_array_to_ptr_hash_map.h
+    collections/aeron_bit_set.h
+    collections/aeron_int64_counter_map.h
+    collections/aeron_int64_to_ptr_hash_map.h
+    collections/aeron_int64_to_tagged_ptr_hash_map.h
+    collections/aeron_map.h
+    collections/aeron_str_to_ptr_hash_map.h
+    command/aeron_control_protocol.h
+    concurrent/aeron_atomic.h
+    concurrent/aeron_atomic64_gcc_x86_64.h
+    concurrent/aeron_atomic64_msvc.h
+    concurrent/aeron_broadcast_descriptor.h
+    concurrent/aeron_broadcast_receiver.h
+    concurrent/aeron_broadcast_transmitter.h
+    concurrent/aeron_concurrent_array_queue.h
+    concurrent/aeron_counters_manager.h
+    concurrent/aeron_distinct_error_log.h
+    concurrent/aeron_exclusive_term_appender.h
+    concurrent/aeron_logbuffer_descriptor.h
+    concurrent/aeron_mpsc_concurrent_array_queue.h
+    concurrent/aeron_mpsc_rb.h
+    concurrent/aeron_rb.h
+    concurrent/aeron_spsc_concurrent_array_queue.h
+    concurrent/aeron_spsc_rb.h
+    concurrent/aeron_term_appender.h
+    concurrent/aeron_term_gap_filler.h
+    concurrent/aeron_term_gap_scanner.h
+    concurrent/aeron_term_rebuilder.h
+    concurrent/aeron_term_scanner.h
+    concurrent/aeron_term_unblocker.h
+    concurrent/aeron_thread.h
+    protocol/aeron_udp_protocol.h
+    reports/aeron_loss_reporter.h
+    status/aeron_local_sockaddr.h
+    util/aeron_arrayutil.h
+    util/aeron_bitutil.h
+    util/aeron_clock.h
+    util/aeron_dlopen.h
+    util/aeron_env.h
+    util/aeron_error.h
+    util/aeron_fileutil.h
+    util/aeron_http_util.h
+    util/aeron_math.h
+    util/aeron_netutil.h
+    util/aeron_parse_util.h
+    util/aeron_platform.h
+    util/aeron_properties_util.h
+    util/aeron_strutil.h
+    uri/aeron_uri.h
+    aeron_agent.h
+    aeron_alloc.h
+    aeron_client.h
+    aeron_client_conductor.h
+    aeron_cnc_file_descriptor.h
+    aeron_common.h
+    aeron_context.h
+    aeron_counter.h
+    aeron_counters.h
+    aeron_exclusive_publication.h
+    aeron_fragment_assembler.h
+    aeron_image.h
+    aeron_log_buffer.h
+    aeron_publication.h
+    aeron_socket.h
+    aeron_subscription.h
+    aeron_windows.h
+    aeronc.h
+    )
+
+add_library(aeron SHARED ${SOURCE} ${HEADERS})
+target_include_directories(aeron
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(aeron_static STATIC ${SOURCE} ${HEADERS})
+target_include_directories(aeron_static
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -DDISABLE_BOUNDS_CHECKS")
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(AERON_LIB_M_LIBS m)
+endif ()
+
+target_link_libraries(
+    aeron
+    ${CMAKE_DL_LIBS}
+    ${AERON_LIB_M_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${AERON_LIB_WINSOCK_LIBS})
+
+target_link_libraries(
+    aeron_static INTERFACE
+    ${CMAKE_DL_LIBS}
+    ${AERON_LIB_M_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${AERON_LIB_WINSOCK_LIBS}
+    -rdynamic # Because dlsym() is used to load strategies.
+    )
+
+if (AERON_INSTALL_TARGETS)
+    install(
+        TARGETS aeron aeron_static
+        RUNTIME DESTINATION lib
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+    install(DIRECTORY . DESTINATION include/aeron FILES_MATCHING PATTERN "*.h")
+endif ()
