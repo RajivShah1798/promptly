@@ -86,10 +86,10 @@ def clean_text(queries):
 
     cleaned_queries = [clean_text_using_lemmatizer(q['query']) for q in queries]
     cleaned_responses = [clean_text_using_lemmatizer(r['response']) for r in queries]
-    cleaned_context = [clean_text_using_lemmatizer(c['context']) for c in queries]
+    # cleaned_context = [clean_text_using_lemmatizer(c['context']) for c in queries]
 
     print(cleaned_queries)
     print(cleaned_responses)
-    print(cleaned_context)
+    # print(cleaned_context)
 
-    return [cleaned_queries, cleaned_responses, cleaned_context]
+    return [cleaned_queries, cleaned_responses]

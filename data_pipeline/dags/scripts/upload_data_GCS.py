@@ -15,28 +15,28 @@ def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: st
     Returns:
     None
     """
-    user_queries, user_response, user_context = data
+    user_queries, user_response = data
 
     for item in range(0,10):
         print("Query:-")
         print(user_queries[item])
         print("-"*100)
-        print("Context:-")
-        print(user_context[item])
-        print("-"*100)
+        # print("Context:-")
+        # print(user_context[item])
+        # print("-"*100)
         print("Response:-")
         print(user_response[item])
         print("-"*100)
         print()
         print("-"*100)
 
-    if not user_queries or not user_response or not user_context:
+    if not user_queries or not user_response:
         raise ValueError("Key Data not found to process the operation.")
 
     # Create DataFrame and Save to a local CSV file
     local_path = base_dir + "/data/preprocessed_user_data.csv" 
 
-    df = pd.DataFrame({'question': user_queries, 'context': user_context, 'response': user_response})
+    df = pd.DataFrame({'question': user_queries, 'response': user_response})
 
     df.to_csv(local_path, index=False)
     
