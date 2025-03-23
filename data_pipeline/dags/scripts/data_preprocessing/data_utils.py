@@ -33,7 +33,8 @@ def remove_punctuation(text):
 
 def clean_text_using_lemmatizer(text):
     """Cleans and preprocesses user queries."""
-    nltk.download("wordnet") 
+    nltk.download('punkt_tab')
+    nltk.download("wordnet")
     
     from nltk.corpus import wordnet
 

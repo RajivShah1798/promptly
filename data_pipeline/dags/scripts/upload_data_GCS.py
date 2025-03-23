@@ -32,6 +32,9 @@ def view_and_upload_data(data: list, bucket_name: str, destination_blob_name: st
 
     if not user_queries or not user_response:
         raise ValueError("Key Data not found to process the operation.")
+    
+    # Ensure directory exists
+    os.makedirs(base_dir + '/data', exist_ok=True)
 
     # Create DataFrame and Save to a local CSV file
     local_path = base_dir + "/data/preprocessed_user_data.csv" 
