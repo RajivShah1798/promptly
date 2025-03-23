@@ -33,17 +33,27 @@ jobs:
         run: |
           NOTEBOOK_SLUG="rajivshah8197/promptly-finetuning"
 
-          # Get existing metadata
-          kaggle kernels status $NOTEBOOK_SLUG > notebook_status.json
+          # Check Kaggle Notebook Status (Ensuring API works)
+          echo "Checking current status of the notebook..."
+          kaggle kernels status $NOTEBOOK_SLUG || { echo " Failed to fetch status. Check notebook slug."; exit 1; }
 
-          # Extract kernel ID
-          KERNEL_ID=$(jq -r '.id' notebook_status.json)
+          # Extract API Key
+          KAGGLE_KEY=$(jq -r .key ~/.kaggle/kaggle.json)
 
-          # Send execution request
-          curl -X POST -H "Authorization: Bearer $(cat ~/.kaggle/kaggle.json | jq -r .key)" \
-               -H "Content-Type: application/json" \
-               -d '{"newRun": true}' \
-               "https://www.kaggle.com/api/v1/kernels/$KERNEL_ID/status"
+          if [[ -z "$KAGGLE_KEY" ]]; then
+            echo " Kaggle API key is missing!"
+            exit 1
+          fi
+
+          # Send Execution Request
+          RESPONSE=$(curl -s -X POST \
+              -H "Authorization: Bearer $KAGGLE_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"newRun": true}' \
+              "https://www.kaggle.com/api/v1/kernels/$NOTEBOOK_SLUG/status")
+
+          # Print API Response
+          echo "API Response: $RESPONSE"
 
       - name: Wait for Training Completion
         run: |
