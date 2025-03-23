@@ -28,11 +28,22 @@ jobs:
       #     kaggle kernels push -p model_pipeline/training/promptly-finetuning.ipynb
       #     sleep 10 # Wait for notebook to be available
       #     kaggle kernels status rajivshah8197/promptly-finetuning
-      
-      - name: Start Kaggle Notebook Execution
+
+      - name: Trigger Kaggle Notebook Execution
         run: |
-          echo "Sending request to begin Model Training"
-          kaggle kernels execute rajivshah8197/promptly-finetuning --wait
+          NOTEBOOK_SLUG="rajivshah8197/promptly-finetuning"
+
+          # Get existing metadata
+          kaggle kernels status $NOTEBOOK_SLUG > notebook_status.json
+
+          # Extract kernel ID
+          KERNEL_ID=$(jq -r '.id' notebook_status.json)
+
+          # Send execution request
+          curl -X POST -H "Authorization: Bearer $(cat ~/.kaggle/kaggle.json | jq -r .key)" \
+               -H "Content-Type: application/json" \
+               -d '{"newRun": true}' \
+               "https://www.kaggle.com/api/v1/kernels/$KERNEL_ID/status"
 
       - name: Wait for Training Completion
         run: |
