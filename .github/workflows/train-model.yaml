@@ -1,0 +1,43 @@
+name: Run Kaggle Notebook
+
+on:
+  push:
+    branches: ["model-training"]
+
+jobs:
+  train_model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Kaggle API
+        run: |
+          mkdir -p ~/.kaggle
+          echo "{\"username\":\"${{ secrets.KAGGLE_USERNAME }}\",\"key\":\"${{ secrets.KAGGLE_KEY }}\"}" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+          echo "Keys configuration is succeeded!"
+
+      - name: Install Kaggle CLI
+        run: |
+          echo "Installing Kaggle CLI!"
+          pip install kaggle
+
+      # - name: Push Kaggle Notebook
+      #   run: |
+      #     kaggle kernels push -p model_pipeline/training/promptly-finetuning.ipynb
+      #     sleep 10 # Wait for notebook to be available
+      #     kaggle kernels status rajivshah8197/promptly-finetuning
+      
+      - name: Start Kaggle Notebook Execution
+        run: |
+          echo "Sending request to begin Model Training"
+          kaggle kernels execute rajivshah8197/promptly-finetuning --wait
+
+      - name: Wait for Training Completion
+        run: |
+          while [[ "$(kaggle kernels status rajivshah8197/promptly-finetuning | grep -c 'running')" -ne 0 ]]; do
+            echo "Waiting for training to complete..."
+            sleep 60
+          done
+          echo "Training Completed!"

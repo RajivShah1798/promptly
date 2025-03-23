@@ -2,7 +2,7 @@
 
 # on:
 #   push:
-#     branches: ["main"]
+#     branches: ["model-training"]
 
 # env:
 #   PROJECT_ID: adroit-chemist-450622-c4
