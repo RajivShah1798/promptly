@@ -49,6 +49,8 @@ jobs:
 
           cd ~/.kaggle
 
+          chmod 666 ~/.kaggle/
+
           # Copy File to kaggle directory
           sudo cp "$NOTEBOOK_FILE" .
 
