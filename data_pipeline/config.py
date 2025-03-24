@@ -8,6 +8,7 @@ load_dotenv()
 NOMIC_API_KEY = os.getenv("NOMIC_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+HUGGING_FACE_API_KEY = os.getenv("HUGGING_FACE_API_KEY")
 
 # Default Settings
 MAX_TOKENS = 500
@@ -27,3 +28,10 @@ UPLOAD_TIME = datetime.now().isoformat()
 # RAG Documents Directory
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
 DATA_FOLDER = base_dir+"/data/rag_documents"
+
+# Model provider for conversation generation
+CONVERSATION_MODEL_PROVIDER = "fireworks-ai"
+
+# conversations documents chunks batch size and limits
+DOCUMENT_CHUNK_SIZE = 50
+DOCUMENT_CHUNK_LIMIT = 100
