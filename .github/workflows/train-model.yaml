@@ -33,7 +33,7 @@ jobs:
         run: |
           NOTEBOOK_SLUG="rajivshah8197/promptly-finetuning"
           KAGGLE_DIR="~/.kaggle"
-          NOTEBOOK_FILE="model_pipeline/training/promptly-finetuning.ipynb"
+          NOTEBOOK_FILE="${{ github.workspace }}/model_pipeline/training/promptly-finetuning.ipynb"
 
           # Check Kaggle Notebook Status (Ensuring API works)
           echo "Checking current status of the notebook..."
