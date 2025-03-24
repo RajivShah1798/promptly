@@ -52,20 +52,15 @@ jobs:
           # Copy File to kaggle directory
           sudo cp "$NOTEBOOK_FILE" .
 
-          # Create kernel-metadata.json
-          cat <<EOF > "kernel-metadata.json"
-          {
-            "id": "$NOTEBOOK_SLUG",
-            "title": "Promptly Finetuning",
-            "code_file": "promptly-finetuning.ipynb",
-            "language": "python",
-            "kernel_type": "notebook",
-            "is_private": "false"
-          }
-          EOF
+          # Pull the latest notebook files
+          echo "📥 Pulling the latest notebook from Kaggle..."
+          kaggle kernels pull -p . "$NOTEBOOK_SLUG" --metadata
 
-          # Push and Send
-          kaggle kernels push -p ~/.kaggle
+          # Verify the download
+          if [ -f "kernel-metadata.json" ]; then
+            echo "✅ Notebook pulled successfully!"
+            echo "📄 Metadata content:"
+            cat "kernel-metadata.json"
 
           echo "Begin executing model training"
           sleep 60
