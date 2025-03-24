@@ -46,7 +46,7 @@ jobs:
           fi
 
           # Push and Send
-          kaggle kernels push -p /training/promptly-finetuning.ipynb
+          kaggle kernels push -p model_pipeline/training/promptly-finetuning.ipynb
 
           echo "Begin executing model training"
           sleep 60
