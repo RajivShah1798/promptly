@@ -45,17 +45,12 @@ jobs:
             exit 1
           fi
 
-          # Send Execution Request
-          RESPONSE=$(curl -s -X POST \
-              -H "Authorization: Bearer $KAGGLE_KEY" \
-              -H "Content-Type: application/json" \
-              -d '{"newRun": true}' \
-              "https://www.kaggle.com/api/v1/kernels/$NOTEBOOK_SLUG/restart")
+          # Push and Send
+          kaggle kernels push -p /training/promptly-finetuning.ipynb
 
+          echo "Begin executing model training"
           sleep 60
 
-          # Print API Response
-          echo "API Response: $RESPONSE"
 
       - name: Wait for Training Completion
         run: |
