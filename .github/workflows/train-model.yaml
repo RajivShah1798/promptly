@@ -50,7 +50,9 @@ jobs:
               -H "Authorization: Bearer $KAGGLE_KEY" \
               -H "Content-Type: application/json" \
               -d '{"newRun": true}' \
-              "https://www.kaggle.com/api/v1/kernels/$NOTEBOOK_SLUG/status")
+              "https://www.kaggle.com/api/v1/kernels/$NOTEBOOK_SLUG/restart")
+
+          sleep 60
 
           # Print API Response
           echo "API Response: $RESPONSE"
