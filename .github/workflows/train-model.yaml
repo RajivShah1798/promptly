@@ -47,11 +47,13 @@ jobs:
             exit 1
           fi
 
+          cd ~/.kaggle
+
           # Copy File to kaggle directory
-          sudo cp "$NOTEBOOK_FILE" "$KAGGLE_DIR"
+          sudo cp "$NOTEBOOK_FILE" .
 
           # Create kernel-metadata.json
-          cat <<EOF > "~/.kaggle/kernel-metadata.json"
+          cat <<EOF > "kernel-metadata.json"
           {
             "id": "$NOTEBOOK_SLUG",
             "title": "Promptly Finetuning",
@@ -63,7 +65,7 @@ jobs:
           EOF
 
           # Push and Send
-          kaggle kernels push -p KAGGLE_DIR
+          kaggle kernels push -p ~/.kaggle
 
           echo "Begin executing model training"
           sleep 60
