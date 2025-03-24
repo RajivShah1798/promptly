@@ -67,9 +67,6 @@ jobs:
           }
           EOF
 
-          # Push and Send
-          kaggle kernels push -p ~/.kaggle
-
           echo "Begin executing model training"
           sleep 60
 
