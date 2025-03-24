@@ -31,7 +31,8 @@ def get_supabase_data():
 
         query_results = response.data  # List of dicts
 
-        print(query_results)
+        if query_results:
+            print(query_results[0])
 
     except Exception as e:
         raise RuntimeError("Failed to load user data from Supabase.") from e
@@ -45,19 +46,25 @@ def push_to_dvc(cleaned_query_results, file_path, RAG_docs=False):
     """
     # Disjunct
     if not RAG_docs:
-        user_queries, user_response, user_context = cleaned_query_results
+        user_queries, user_response = cleaned_query_results
 
-        if not user_queries or not user_response or not user_context:
+        if not user_queries or not user_response:
             raise ValueError("Key Data not found for DVC push.")
 
     try:
         # DVC Add, Commit, and Push to GCP Bucket
         print('File Path -> ', base_dir + file_path)
+        subprocess.run(["git", "init"])
+
+        subprocess.run(["dvc", "init"], check=True)
+
         subprocess.run(["dvc", "add", base_dir + file_path], check=True)
 
-        subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
+        subprocess.run(["dvc", "push"], check=True)
 
-        # Delete data.json.dvc
+        # subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
+
+        # # Delete data.json.dvc
         os.remove(base_dir + file_path + ".dvc")
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"DVC push failed: {e}")
