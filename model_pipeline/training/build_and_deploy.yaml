@@ -46,18 +46,3 @@
 #       - name: "Remove service account key"
 #         run: |
 #           rm ./adroit-chemist-450622-c4-824fc34978e0.json
-
-# # Create kernel-metadata.json
-# cat <<EOF > "kernel-metadata.json"
-# {
-#   "id": "$NOTEBOOK_SLUG",
-#   "title": "Promptly Finetuning",
-#   "code_file": "promptly-finetuning.ipynb",
-#   "language": "python",
-#   "kernel_type": "notebook",
-#   "is_private": "false"
-# }
-# EOF
-
-# # Push and Send
-# kaggle kernels push -p ~/.kaggle
