@@ -23,11 +23,15 @@ jobs:
           echo "Installing Kaggle CLI!"
           pip install kaggle
 
-      # - name: Push Kaggle Notebook
-      #   run: |
-      #     kaggle kernels push -p model_pipeline/training/promptly-finetuning.ipynb
-      #     sleep 10 # Wait for notebook to be available
-      #     kaggle kernels status rajivshah8197/promptly-finetuning
+      - name: Extract & Validate Kaggle API Key
+        run: |
+          # Extract API Key
+          KAGGLE_KEY=$(jq -r .key ~/.kaggle/kaggle.json)
+
+          if [[ -z "$KAGGLE_KEY" ]]; then
+            echo " Kaggle API key is missing!"
+            exit 1
+          fi
 
       - name: Trigger Kaggle Notebook Execution
         run: |
@@ -38,14 +42,6 @@ jobs:
           # Check Kaggle Notebook Status (Ensuring API works)
           echo "Checking current status of the notebook..."
           kaggle kernels status $NOTEBOOK_SLUG || { echo " Failed to fetch status. Check notebook slug."; exit 1; }
-
-          # Extract API Key
-          KAGGLE_KEY=$(jq -r .key ~/.kaggle/kaggle.json)
-
-          if [[ -z "$KAGGLE_KEY" ]]; then
-            echo " Kaggle API key is missing!"
-            exit 1
-          fi
 
           chmod 777 ~/.kaggle
 
