@@ -1,0 +1,48 @@
+name: Build and Push to Artifact Registry
+
+on:
+  push:
+    branches: ["model-trainig"]
+
+env:
+  PROJECT_ID: adroit-chemist-450622-c4
+  REGION: us-central1
+
+jobs:
+  build-push-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3
+
+      - name: "Authenticate with Google Cloud"
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_BUCKET_KEY }}
+
+      - name: "Set up Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: "Use gcloud CLI"
+        run: gcloud info
+
+      - name: "Configure Docker authentication"
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: "Decrypt and set Google Cloud service account key"
+        run: |
+          echo "${{ secrets.GCP_BUCKET_KEY }}" > ./adroit-chemist-450622-c4-824fc34978e0.json
+          export GOOGLE_APPLICATION_CREDENTIALS=./adroit-chemist-450622-c4-824fc34978e0.json
+
+      - name: "Build Docker image"
+        run: |
+          docker build -t us-docker.pkg.dev/adroit-chemist-450622-c4/gcr.io/promptly-backend:latest --build-arg GOOGLE_APPLICATION_CREDENTIALS=./adroit-chemist-450622-c4-824fc34978e0.json model_endpoint/
+
+      - name: "Push Docker image to artificat registry"
+        run: |
+          docker push us-docker.pkg.dev/adroit-chemist-450622-c4/gcr.io/promptly-backend:latest
+
+      - name: "Remove service account key"
+        run: |
+          rm ./adroit-chemist-450622-c4-824fc34978e0.json

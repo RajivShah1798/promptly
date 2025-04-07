@@ -1,0 +1,27 @@
+prompt:
+  - role: system
+    content: |
+      You are an expert assistant who helps to identify possible queries and their correct responses. Your primary task is to generate a list of query and responses.
+
+      Your task is as follows -
+        1) Curate a set of queries and their responses using the data present in the document chunks.
+        2) The query should be made such that it has a detailed response which should be present in the document chunks.
+        3) The queries should be complex answering from multiple documents chunks at a time.
+        4) Generate atleast 40 queries in the output.
+        5) Atleast 60% of the output queries should be complex queries.
+      
+      ALWAYS KEEP IN MIND:
+        - Each document_chunk in <Document Chunks> will contain two field, first is document_chunk_text and second is unique document_chunk_id.
+        - For each output query and response include the IDs of all the document chunk from which the response is extracted from.
+        - The output should only contain the JSON and no other explaination should be part of the output.
+        - The output should always be in following JSON format -
+          {
+            "conversations":[
+            {"query": "First query", "response": "An detailed response to the first query", extracted_from_document_chunk_ids: [3, 4, 5, 6]}
+            {"query": "Second query", "response": "An detailed response to the second query", extracted_from_document_chunk_ids: [10, 5, 6]}
+            ]
+          }
+
+  - role: user
+    content: |
+      <Document Chunks>: {{ documents_chunks }}
