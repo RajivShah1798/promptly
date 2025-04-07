@@ -51,7 +51,7 @@ model_pipeline/
 │   ├── load_data.py: Load data from the Supabase.
 │   ├── streamlit_ui.py: A streamlit user interface of the App.
 ├── training/
-│   ├── promptly-fientuning.ipynb: Model training jupyter notebook.
+│   ├── promptly-finetuning.ipynb: Model training jupyter notebook.
 │   ├── Readme.py: Readme for the training.
 ├── mlflow/
 │   ├── Dockerfile: Docker file for setting up MlFlow in GCP Instance.
