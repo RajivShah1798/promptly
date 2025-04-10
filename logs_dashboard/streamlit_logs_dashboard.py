@@ -78,3 +78,30 @@ if "fallback_model" in df.columns:
 # --- Debug Table (Optional) ---
 with st.expander("🛠️ View Raw Logs Table (Debugging)"):
     st.dataframe(df)
+
+# --- Dislike Ratio Trend Over Time ---
+st.subheader("📉 Dislike Ratio Over Time")
+df['minute'] = df["created_at"].dt.floor("min")
+dislike_trend = df.groupby("minute")["is_disliked"].mean()
+st.line_chart(dislike_trend)
+
+# --- Evaluate retraining policy ---
+from datetime import datetime, timedelta
+
+st.subheader("🔁 Retraining Trigger Status (Last 1 Hour)")
+
+# Step 1: Filter logs within the last 60 minutes
+time_threshold = datetime.utcnow() - timedelta(minutes=60)
+recent_logs = df[df["created_at"] >= time_threshold]
+recent_dislikes = recent_logs["is_disliked"].sum()
+recent_total = len(recent_logs)
+recent_dislike_ratio = (recent_dislikes / recent_total) if recent_total else 0
+
+# Step 2: Display status
+if recent_total == 0:
+    st.info("ℹ️ No queries in the last hour. Retraining not required.")
+elif recent_dislike_ratio > 0.5:
+    st.error(f"🚨 Retraining Required — Dislike Ratio = {recent_dislike_ratio:.2%}")
+else:
+    st.success(f"✅ Stable — Dislike Ratio = {recent_dislike_ratio:.2%}")
+
