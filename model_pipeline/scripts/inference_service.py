@@ -9,6 +9,9 @@ from supabase import create_client
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
+import uuid
+from datetime import datetime
+from fastapi.responses import JSONResponse
 
 # ✅ Environment Setup
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -19,7 +22,15 @@ if not SUPABASE_URL or not SUPABASE_KEY or not HUGGINGFACE_API_KEY:
     raise EnvironmentError("❌ SUPABASE_URL, SUPABASE_KEY, or HUGGINGFACE_API_KEY not set.")
 
 # ✅ Logging Setup
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("logs/inference_events.log", mode="a")
+    ]
+)
+
 
 # ✅ Initialize Supabase Client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -121,13 +132,55 @@ def ask_query(input_data: QueryInput):
     query = input_data.query
     query_embedding = embeddings_model.embed_query(query)
 
+    request_id = str(uuid.uuid4())
+    timestamp = datetime.utcnow().isoformat()
+
     # Retrieve relevant chunks
     relevant_chunks = retrieve_relevant_chunks(query_embedding, top_k=3)
     if not relevant_chunks:
+        log_entry = {
+            "request_id": request_id,
+            "timestamp": timestamp,
+            "query": query,
+            "answer": None,
+            "disliked": False,
+            "fallback_model": "zephyr-7b-beta",
+            "references": [],
+            "status": "No context found"
+        }
+        logging.info(f"[PROMPTLY_LOG] {log_entry}")
         return {"query": query, "answer": "No relevant information found.", "references": []}
 
-    # Synthesize LLM answer
+    # Synthesize answer
     answer = synthesize_answer(query, relevant_chunks)
+
+    # ✅ STRUCTURED LOGGING ENTRY
+    log_entry = {
+        "request_id": request_id,
+        "timestamp": timestamp,
+        "query": query,
+        "answer_snippet": answer[:100],
+        "disliked": False,
+        "fallback_model": "zephyr-7b-beta",
+        "references": [
+            {"document": ref["document"], "section": ref["section"]} for ref in relevant_chunks
+        ],
+        "status": "Success"
+    }
+
+    # ✅ LOG to console and file
+    logging.info(f"[PROMPTLY_LOG] {log_entry}")
+
+    # ✅ Optional: Supabase insert (append created_at once column is ready)
+    supabase.table("conversations").insert({
+    "query": query,
+    "response": answer,
+    "user_id": 1,
+    "is_private": False,
+    "is_disliked": False,
+    "fallback_model": "zephyr-7b-beta",
+    "created_at": timestamp  # ISO UTC string from earlier
+}).execute()
 
     return {
         "query": query,
@@ -135,6 +188,27 @@ def ask_query(input_data: QueryInput):
         "references": relevant_chunks,
         "confidence": "High" if answer else "Low"
     }
+
+class FeedbackInput(BaseModel):
+    conversation_id: int
+    is_disliked: bool
+
+@app.post("/feedback")
+def update_feedback(feedback: FeedbackInput):
+    try:
+        response = supabase.table("conversations").update({
+            "is_disliked": feedback.is_disliked
+        }).eq("id", feedback.conversation_id).execute()
+
+        if len(response.data) == 0:
+            raise ValueError("Conversation ID not found")
+
+        logging.info(f"[PROMPTLY_FEEDBACK] Updated feedback for conversation ID {feedback.conversation_id} → Disliked = {feedback.is_disliked}")
+        return JSONResponse(content={"message": "Feedback updated successfully"}, status_code=200)
+
+    except Exception as e:
+        logging.error(f"❌ Failed to update feedback: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
