@@ -5,7 +5,7 @@ import google.auth.transport.requests
 # Replace these with your actual values
 PROJECT_ID="45932739705"
 REGION = "us-central1"
-ENDPOINT_ID="2218045906224152576"
+ENDPOINT_ID="1552920536256872448"
 
 # Vertex AI REST endpoint URL
 url = f"https://{REGION}-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/{REGION}/endpoints/{ENDPOINT_ID}:predict"

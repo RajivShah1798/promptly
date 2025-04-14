@@ -57,3 +57,38 @@ async def vertex_predict(project: str, region: str, endpoint: str, request: Requ
         )
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return {"predictions": [response]}
+
+
+@app.post("/predict")
+async def predict(request: Request):
+    payload = await request.json()
+    
+    # Handle both single-instance and batch requests
+    instances = payload.get("instances", [])
+    if not instances:
+        return {"error": "No instances provided in request"}
+    
+    instance = instances[0]
+    prompt_request = PromptRequest(**instance)
+    results = []
+
+    # Access attributes directly, not with .get()
+    prompt = prompt_request.prompt
+    max_new_tokens = prompt_request.max_new_tokens
+    temperature = prompt_request.temperature
+    top_p = prompt_request.top_p
+    
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    results.append(response)
+    
+    return {"predictions": results}
