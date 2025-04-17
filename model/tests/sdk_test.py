@@ -4,7 +4,7 @@ from google.cloud import aiplatform
 
 PROJECT_ID="45932739705"
 REGION = "us-central1"
-ENDPOINT_ID="1552920536256872448"
+ENDPOINT_ID="7515123492941987840"
 
 aiplatform.init(project=PROJECT_ID, location="us-central1")
 

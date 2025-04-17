@@ -36,29 +36,6 @@ def health_check(endpoint_id: str, model_id: str):
 def health():
     return {"status": "healthy"}
 
-# Vertex AI-compatible route
-@app.post("/v1/projects/{project}/locations/{region}/endpoints/{endpoint}:predict")
-async def vertex_predict(project: str, region: str, endpoint: str, request: Request):
-    payload = await request.json()
-    
-    # Assume first item in "instances" list matches PromptRequest format
-    instance = payload["instances"][0]
-    prompt_request = PromptRequest(**instance)
-
-    inputs = tokenizer(prompt_request.prompt, return_tensors="pt").to(device)
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=prompt_request.max_new_tokens,
-            temperature=prompt_request.temperature,
-            top_p=prompt_request.top_p,
-            do_sample=True,
-            eos_token_id=tokenizer.eos_token_id,
-        )
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return {"predictions": [response]}
-
-
 @app.post("/predict")
 async def predict(request: Request):
     payload = await request.json()
@@ -92,3 +69,25 @@ async def predict(request: Request):
     results.append(response)
     
     return {"predictions": results}
+
+# Vertex AI-compatible route
+@app.post("/v1/projects/{project}/locations/{region}/endpoints/{endpoint}:predict")
+async def vertex_predict(project: str, region: str, endpoint: str, request: Request):
+    payload = await request.json()
+    
+    # Assume first item in "instances" list matches PromptRequest format
+    instance = payload["instances"][0]
+    prompt_request = PromptRequest(**instance)
+
+    inputs = tokenizer(prompt_request.prompt, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=prompt_request.max_new_tokens,
+            temperature=prompt_request.temperature,
+            top_p=prompt_request.top_p,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return {"predictions": [response]}

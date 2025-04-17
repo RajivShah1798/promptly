@@ -1,0 +1,92 @@
+name: Vertex AI Model CI/CD Pipeline
+
+on:
+  repository_dispatch:
+    types: [model-updated]
+  # You can add other triggers as needed
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: "Authenticate with Google Cloud"
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_BUCKET_KEY }}
+      
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+        
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: "Decrypt and set Google Cloud service account key"
+      run: |
+        echo "${{ secrets.GCP_BUCKET_KEY }}" > ./adroit-chemist-450622-c4-824fc34978e0.json
+        export GOOGLE_APPLICATION_CREDENTIALS=./adroit-chemist-450622-c4-824fc34978e0.json
+        
+    - name: Build and push Docker image
+      run: |
+        IMAGE_NAME="us-central1-docker.pkg.dev/adroit-chemist-450622-c4/trained-model/promptly-tuned:latest"
+        # Build from the model directory where Dockerfile is located
+        docker build -t $IMAGE_NAME ./model
+        docker push $IMAGE_NAME
+        
+    - name: Deploy Model to Vertex AI
+      run: |
+        python -c "
+        import os
+        from google.cloud import aiplatform
+        import datetime
+
+        # Initialize Vertex AI with your project settings
+        aiplatform.init(
+            project='${{ secrets.GCP_PROJECT_ID }}',
+            location='${{ secrets.GCP_REGION }}'
+        )
+
+        # Generate a timestamp for unique model display name
+        timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+
+        # Upload the model to Vertex AI Model Registry
+        model = aiplatform.Model.upload(
+            display_name=f'promptly-finetuned-qwen-{timestamp}',
+            serving_container_image_uri='us-central1-docker.pkg.dev/adroit-chemist-450622-c4/trained-model/promptly-tuned:latest',
+            serving_container_predict_route='/predict',
+            labels={'type': 'qwen'},
+        )
+
+        # Check if endpoint already exists
+        endpoints = aiplatform.Endpoint.list(
+            filter='display_name=promptly-finetuned-endpoint'
+        )
+
+        if endpoints:
+            endpoint = endpoints[0]  # Use the existing endpoint
+            print(f'Using existing endpoint: {endpoint.name}')
+        else:
+            # Create a new endpoint
+            endpoint = aiplatform.Endpoint.create(
+                display_name='promptly-finetuned-endpoint'
+            )
+            print(f'Created new endpoint: {endpoint.name}')
+
+        # Always deploy the model to the endpoint with highcpu-8
+        # This will create a new deployment and replace any existing ones
+        deployment = endpoint.deploy(
+            model=model,
+            machine_type='n1-highcpu-8',
+            min_replica_count=1,
+            max_replica_count=2,
+            traffic_percentage=100,
+            deployed_model_display_name=f'promptly-finetuned-deployment-{timestamp}'
+        )
+
+        print(f'Model redeployed successfully to endpoint {endpoint.name}')
+        "
