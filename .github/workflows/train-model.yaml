@@ -2,7 +2,7 @@ name: Run Kaggle Notebook
 
 on:
   push:
-    branches: ["model-training", "ronak/model_serving"]
+    branches: ["model-training", "ronak/model-serving"]
 
 jobs:
   train_model:
