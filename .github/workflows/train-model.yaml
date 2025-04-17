@@ -2,7 +2,7 @@ name: Run Kaggle Notebook
 
 on:
   push:
-    branches: ["model-training"]
+    branches: ["model-training", "model_serving"]
 
 jobs:
   train_model:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Trigger Kaggle Notebook Execution
         run: |
-          NOTEBOOK_SLUG="rajivshah8197/promptly-finetuning"
+          NOTEBOOK_SLUG="sagarbilwal/promptlymodelfinetuning"
           KAGGLE_DIR="~/.kaggle"
           NOTEBOOK_FILE="${{ github.workspace }}/model_pipeline/training/promptly-finetuning.ipynb"
 
@@ -72,7 +72,7 @@ jobs:
 
       - name: Wait for Training Completion
         run: |
-          while [[ "$(kaggle kernels status rajivshah8197/promptly-finetuning | grep -c 'running')" -ne 0 ]]; do
+          while [[ "$(kaggle kernels status sagarbilwal/promptlymodelfinetuning | grep -c 'running')" -ne 0 ]]; do
             echo "Waiting for training to complete..."
             sleep 60
           done

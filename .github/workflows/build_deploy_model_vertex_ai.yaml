@@ -90,3 +90,7 @@ jobs:
 
         print(f'Model redeployed successfully to endpoint {endpoint.name}')
         "
+
+    - name: "Remove service account key"
+      run: |
+        rm ./adroit-chemist-450622-c4-824fc34978e0.json
