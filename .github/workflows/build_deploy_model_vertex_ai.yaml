@@ -40,6 +40,7 @@ jobs:
         
     - name: Deploy Model to Vertex AI
       run: |
+        pip install google-cloud-aiplatform
         python -c "
         import os
         from google.cloud import aiplatform
@@ -47,8 +48,8 @@ jobs:
 
         # Initialize Vertex AI with your project settings
         aiplatform.init(
-            project='${{ secrets.GCP_PROJECT_ID }}',
-            location='${{ secrets.GCP_REGION }}'
+            project='adroit-chemist-450622-c4',
+            location='us-central1',
         )
 
         # Generate a timestamp for unique model display name
@@ -83,9 +84,9 @@ jobs:
             model=model,
             machine_type='n1-highcpu-8',
             min_replica_count=1,
-            max_replica_count=2,
+            max_replica_count=1,
             traffic_percentage=100,
-            deployed_model_display_name=f'promptly-finetuned-deployment-{timestamp}'
+            deployed_model_display_name=f'promptly-finetuned-auto-deployed-{timestamp}'
         )
 
         print(f'Model redeployed successfully to endpoint {endpoint.name}')
