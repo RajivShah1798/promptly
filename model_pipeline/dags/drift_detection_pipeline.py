@@ -1,26 +1,35 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime, timedelta
-import logging
-from model_pipeline.scripts.drift_detection import detect_data_drift  # Refactor this function into your script
+from datetime import timedelta, datetime
+import sys
+import os
+
+# ✅ Add the scripts directory to path
+sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
+from drift_detection import run_drift_detection
 
 default_args = {
-    'owner': 'Promptly Team',
+    'owner': 'Promptly',
+    'depends_on_past': False,
     'start_date': datetime(2025, 4, 1),
+    'email_on_failure': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
 
-dag = DAG(
-    dag_id='drift_detection_pipeline',
+with DAG(
+    'drift_detection_pipeline',
     default_args=default_args,
-    description='Periodic check for data drift using recent Supabase embeddings',
-    schedule_interval='@hourly',  # or use '0 * * * *'
-    catchup=False
-)
+    description='Hourly drift detection on document_chunks embeddings.',
+    schedule_interval='@hourly',
+    catchup=False,
+    tags=['drift', 'monitoring']
+) as dag:
 
-drift_detection_task = PythonOperator(
-    task_id='run_drift_detection',
-    python_callable=detect_data_drift,
-    dag=dag
-)
+    detect_drift_task = PythonOperator(
+        task_id="run_drift_check",
+        python_callable=run_drift_detection,
+        provide_context=True
+    )
+
+    detect_drift_task

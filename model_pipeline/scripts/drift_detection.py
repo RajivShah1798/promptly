@@ -6,18 +6,15 @@ from supabase import create_client
 from scipy.spatial.distance import cosine
 from dotenv import load_dotenv
 
-# === Load Environment Variables ===
+# === Load Env ===
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# === Initialize Supabase ===
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# === Logging Setup ===
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# === Drift Detection Config ===
 DRIFT_THRESHOLD = 0.2
 HOURS_TO_LOOK_BACK = 1
 
@@ -41,14 +38,11 @@ def detect_drift(reference_embeds, recent_embeds):
     logging.info(f"📊 Cosine Distance between recent and historical: {drift_score:.4f}")
     return drift_score > DRIFT_THRESHOLD
 
-def detect_data_drift():
+def run_drift_detection():
     logging.info("🔍 Running Data Drift Detection")
-
     now = datetime.utcnow()
-    one_hour_ago = now - timedelta(hours=HOURS_TO_LOOK_BACK)
-    since = one_hour_ago.isoformat()
+    since = (now - timedelta(hours=HOURS_TO_LOOK_BACK)).isoformat()
 
-    # Fetch all historical document embeddings
     historical_response = supabase.table("document_chunks").select("embedding").execute()
     historical_embeddings = [np.array(row["embedding"]) for row in historical_response.data if row.get("embedding")]
 
@@ -56,14 +50,12 @@ def detect_data_drift():
         logging.warning("⚠️ Not enough historical data for drift detection.")
         return
 
-    # Fetch recent embeddings from the past hour
     recent_embeddings = fetch_embeddings("document_chunks", since)
 
     if not recent_embeddings:
-        logging.info("⏱️ No recent embeddings found in the past hour. Skipping drift check.")
+        logging.info("⏱️ No recent embeddings found. Skipping drift check.")
         return
 
-    # Compare embeddings
     drifted = detect_drift(historical_embeddings, recent_embeddings)
 
     if drifted:
@@ -71,8 +63,6 @@ def detect_data_drift():
     else:
         logging.info("✅ No significant drift detected.")
 
-def main():
-    detect_data_drift()
-
+# Allow CLI test
 if __name__ == "__main__":
-    main()
+    run_drift_detection()
