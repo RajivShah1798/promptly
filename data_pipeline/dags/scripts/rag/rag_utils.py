@@ -1,7 +1,7 @@
 import os
 import logging
 import pymupdf4llm
-from datetime import datetime
+from datetime import datetime, timezone
 import nomic
 from nomic import embed
 from supabase import create_client
@@ -101,13 +101,15 @@ def embed_and_store_chunks(chunked_data):
             "org_id": config.ORG_ID,
             "content": "\n".join(chunks),
             "upload_user_id": config.UPLOAD_USER_ID,
-            "upload_time": datetime.now().isoformat(),
+            "upload_time": datetime.now(timezone.utc).isoformat(),
         }
 
         response = supabase.table(config.DOCUMENT_TABLE).insert(document_data).execute()
         if response.data:
             document_id = response.data[0]["id"]
 
+            current_ts = datetime.now(timezone.utc).isoformat()
+            logging.info(f"📄 Preparing to insert document `{filename}` at UTC: {current_ts}")
             # Insert chunk embeddings
             chunk_data = [
                 {
@@ -115,13 +117,14 @@ def embed_and_store_chunks(chunked_data):
                     "chunk_content": chunk,
                     "embedding": embeddings[idx],
                     "section_order": idx,
-                    "created_at": datetime.now().isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
                 }
                 for idx, chunk in enumerate(chunks)
             ]
 
             chunk_response = supabase.table(config.CHUNKS_TABLE).insert(chunk_data).execute()
             if chunk_response.data:
+                logging.info(f"✅ Inserted {len(chunk_response.data)} chunks for `{filename}` with created_at = {current_ts}")
                 chunks_store.append(chunk_response.data)
                 logging.info(f"Inserted document {filename} and its chunks into Supabase.")
             else:

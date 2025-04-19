@@ -1,7 +1,7 @@
 import os
 import logging
 import pymupdf4llm
-from datetime import datetime
+from datetime import datetime, timezone
 import nomic
 from nomic import embed
 from supabase import create_client
@@ -88,20 +88,21 @@ def embed_and_store_chunks(chunked_data, is_private, org_id, user_email_id, conv
                 model=config.MODEL_NAME,
                 task_type=config.TASK_TYPE,
             )
-
             embeddings = output.get("embeddings")
         except Exception as e:
             logging.error(f"Error while embedding chunks: {e}")
             continue
 
-        # Prepare document metadata
+        utc_now = datetime.now(timezone.utc).isoformat()
+        logging.info(f"📄 Embedding and inserting document `{filename}` at {utc_now}")
+
         document_data = {
             "location": filename,
             "is_private": is_private,
             "org_id": org_id,
             "content": "\n".join(chunks),
             "upload_user_id": user_email_id,
-            "upload_time": datetime.now().isoformat(),
+            "upload_time": utc_now,
             "conversation_session_id": conversation_session_id
         }
 
@@ -115,7 +116,7 @@ def embed_and_store_chunks(chunked_data, is_private, org_id, user_email_id, conv
                     "chunk_content": chunk,
                     "embedding": embeddings[idx],
                     "section_order": idx,
-                    "created_at": datetime.now().isoformat(),
+                    "created_at": utc_now,
                 }
                 for idx, chunk in enumerate(chunks)
             ]
@@ -123,10 +124,10 @@ def embed_and_store_chunks(chunked_data, is_private, org_id, user_email_id, conv
             chunk_response = supabase.table(config.CHUNKS_TABLE).insert(chunk_data).execute()
             if chunk_response.data:
                 chunks_store.append(chunk_response.data)
-                logging.info(f"Inserted document {filename} and its chunks into Supabase.")
+                logging.info(f"✅ Inserted `{filename}` with {len(chunks)} chunks at {utc_now}")
             else:
-                logging.error(f"Error inserting chunks for {filename}: {chunk_response}")
+                logging.error(f"❌ Error inserting chunks for `{filename}`: {chunk_response}")
         else:
-            logging.error(f"Error inserting document {filename}: {response}")
+            logging.error(f"❌ Error inserting document `{filename}`: {response}")
 
     return chunks_store
