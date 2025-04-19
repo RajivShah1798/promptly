@@ -134,6 +134,15 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
+# Begin Model Training
+# trigger_model_training_pipeline = PythonOperator(
+#     task_id="trigger_model_training_pipeline",
+#     python_callable=trigger_training_pipeline,
+#     op_args=[send_success_email_dag.output],
+#     provide_context = True,
+#     dag=dag,
+# )
+
 # Define task dependencies
 fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task
 embed_and_store_task >> task_upload_processed_data_to_GCS
