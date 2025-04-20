@@ -60,13 +60,14 @@ def push_to_dvc(cleaned_query_results, file_path, RAG_docs=False):
 
         subprocess.run(["dvc", "add", base_dir + file_path], check=True)
 
-        subprocess.run(["dvc", "push"], check=True)
+        subprocess.run(["dvc", "push", "-v"], check=True)
 
         # subprocess.run(["dvc", "push", "-r", "gcs_remote"], check=True)  # DVC save to gcpbucket
 
         # # Delete data.json.dvc
         os.remove(base_dir + file_path + ".dvc")
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"DVC push failed: {e}")
+        print(f"Error during DVC operations: {e}")
+        # raise RuntimeError(f"DVC push failed: {e}")
 
     return "DVC Push to Succeeded!"

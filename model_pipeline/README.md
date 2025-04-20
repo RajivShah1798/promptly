@@ -46,21 +46,17 @@ Real-time updates keep stakeholders informed:
 model_pipeline/
 ├── README.md: Documentation of the model pipeline.
 ├── dags/ (not used, as Supabase is the main data source)
-├── notebooks/
-│   ├── train_model.ipynb: Jupyter notebook for fine-tuning the model.
-│   ├── eval_model.ipynb: Jupyter notebook for evaluating model performance.
-│   ├── bias_detection.ipynb: Notebook for analyzing and mitigating bias.
-├── github_workflows/
-│   ├── kaggle_train.yml: GitHub Actions workflow to trigger Kaggle notebook.
-├── huggingface/
-│   ├── upload_model.py: Script to upload trained model to Hugging Face.
-├── supabase/
-│   ├── fetch_data.py: Retrieves processed documents from Supabase.
-│   ├── load_to_rag.py: Loads fine-tuned models into the RAG system.
+├── scripts/
+│   ├── bias_detection.py: Script for detecting bias while training the model.
+│   ├── load_data.py: Load data from the Supabase.
+│   ├── streamlit_ui.py: A streamlit user interface of the App.
+├── training/
+│   ├── promptly-finetuning.ipynb: Model training jupyter notebook.
+│   ├── Readme.py: Readme for the training.
+├── mlflow/
+│   ├── Dockerfile: Docker file for setting up MlFlow in GCP Instance.
 ├── tests/
-│   ├── unit_tests.py: Unit tests for core pipeline functions.
-│   ├── integration_tests.py: Tests for end-to-end workflow validation.
-├── requirements.txt: Python dependencies required for execution.
+
 
 
 ## Key Features
