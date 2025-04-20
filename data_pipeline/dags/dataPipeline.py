@@ -103,6 +103,15 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
+trigger_model_training_pipeline = PythonOperator(
+    task_id="trigger_model_training_pipeline",
+    python_callable=trigger_model_training,
+    op_args=[send_success_email_dag.output],
+    provide_context = True,
+    dag=dag,
+)
+
+
 # Set task dependencies and Optimise Flow
 fetch_user_queries >> task_validate_schema >> task_clean_queries
 task_clean_queries >> task_view_and_upload_data 
