@@ -12,6 +12,7 @@ from scripts.email_utils import send_success_email, send_failure_email
 from scripts.data_preprocessing.data_utils import clean_text
 from scripts.data_preprocessing.validate_schema import validate_schema
 from scripts.upload_data_GCS import view_and_upload_data
+from scripts.trigger_model_training_pipeline import trigger_model_training
 
 # Enable pickle support for XCom, allowing data to be passed between tasks
 conf.set('core', 'enable_xcom_pickling', 'True')
