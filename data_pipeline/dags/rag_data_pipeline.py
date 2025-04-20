@@ -11,6 +11,7 @@ from scripts.data_preprocessing.check_pii_data import check_for_pii, redact_pii
 from airflow import configuration as conf
 from scripts.rag.validate_schema import validate_rag_schema
 from scripts.upload_data_GCS import upload_docs_data_to_gcs
+from scripts.trigger_model_training_pipeline import trigger_model_training
 
 conf.set('core', 'enable_xcom_pickling', 'True')
 
@@ -135,13 +136,14 @@ send_success_email_dag = PythonOperator(
 )
 
 # Begin Model Training
-# trigger_model_training_pipeline = PythonOperator(
-#     task_id="trigger_model_training_pipeline",
-#     python_callable=trigger_training_pipeline,
-#     op_args=[send_success_email_dag.output],
-#     provide_context = True,
-#     dag=dag,
-# )
+trigger_model_training_pipeline = PythonOperator(
+    task_id="trigger_model_training_pipeline",
+    python_callable=trigger_model_training,
+    op_args=[send_success_email_dag.output],
+    provide_context = True,
+    dag=dag,
+)
+
 
 # Define task dependencies
 fetch_documents_task >> read_documents_task >> check_pii_task >> redact_pii_task >> chunk_text_task >> task_validate_schema >> embed_and_store_task
