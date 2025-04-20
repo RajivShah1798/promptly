@@ -12,6 +12,8 @@ from scripts.email_utils import send_success_email, send_failure_email
 from scripts.data_preprocessing.data_utils import clean_text
 from scripts.data_preprocessing.validate_schema import validate_schema
 from scripts.upload_data_GCS import view_and_upload_data
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
 
 # Enable pickle support for XCom, allowing data to be passed between tasks
 conf.set('core', 'enable_xcom_pickling', 'True')
@@ -103,11 +105,21 @@ send_success_email_dag = PythonOperator(
     dag=dag,
 )
 
+trigger_rag_dag = TriggerDagRunOperator(
+    task_id='trigger_RAG_document_pipeline',
+    trigger_dag_id='Document_Processing_Pipeline', 
+    wait_for_completion=False,
+    reset_dag_run=True,
+    conf={"source": "Train_User_Queries"},
+    dag=dag,
+)
+
 # Set task dependencies and Optimise Flow
 fetch_user_queries >> task_validate_schema >> task_clean_queries
 task_clean_queries >> task_view_and_upload_data 
 task_clean_queries >> push_data_to_DVC
 push_data_to_DVC >> send_success_email_dag
+send_success_email_dag >> trigger_rag_dag
 
 # Set up the failure callback
 dag.on_failure_callback = handle_failure

@@ -1,6 +1,8 @@
 name: Run Kaggle Notebook
 
 on:
+  repository_dispatch:
+    types: [model-training]
   push:
     branches: ["model-training", "ronak/model-serving"]
 
@@ -35,7 +37,7 @@ jobs:
 
       - name: Trigger Kaggle Notebook Execution
         run: |
-          NOTEBOOK_SLUG="sagarbilwal/promptlymodelfinetuning"
+          NOTEBOOK_SLUG="sagarbilwal/promptly-finetuning"
           KAGGLE_DIR="~/.kaggle"
           NOTEBOOK_FILE="${{ github.workspace }}/model_pipeline/training/promptly-finetuning.ipynb"
 
@@ -54,7 +56,7 @@ jobs:
           sudo cat <<EOF > "kernel-metadata.json"
           {
             "id": "$NOTEBOOK_SLUG",
-            "title": "Promptly Model Qwen Finetuning",
+            "title": "Promptly Finetuning",
             "code_file": "promptly-finetuning.ipynb",
             "language": "python",
             "kernel_type": "notebook",

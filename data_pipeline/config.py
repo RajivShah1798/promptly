@@ -9,6 +9,7 @@ NOMIC_API_KEY = os.getenv("NOMIC_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 HUGGING_FACE_API_KEY = os.getenv("HUGGING_FACE_API_KEY")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # Default Settings
 MAX_TOKENS = 500
