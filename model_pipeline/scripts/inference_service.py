@@ -37,6 +37,8 @@ nomic.login(token=config.NOMIC_API_KEY)
 # ✅ Setup fallback LLM inference clients
 llm_clients = [
     InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HUGGINGFACE_API_KEY),
+    InferenceClient(model="mistralai/Mistral-7B-Instruct-v0.1", token=HUGGINGFACE_API_KEY),
+    InferenceClient(model="tiiuae/falcon-7b-instruct", token=HUGGINGFACE_API_KEY)
     # InferenceClient(model="tiiuae/falcon-7b-instruct", token=HUGGINGFACE_API_KEY),
     # InferenceClient(model="google/gemma-7b-it", token=HUGGINGFACE_API_KEY)
 ]
@@ -101,26 +103,43 @@ class QueryInput(BaseModel):
 def ask_query(input_data: QueryInput):
     query = input_data.query
     print("Reached here")
+
+    # Generate embedding for the query
     query_embedding_response = embed.text(
         texts=[query],
         model=config.MODEL_NAME,
         task_type=config.TASK_TYPE,
     )
-    # print(type(query_embedding_response))
     query_embedding = query_embedding_response["embeddings"][0]
-    # Retrieve relevant chunks
+
+    # Retrieve top-k relevant chunks with document titles
     print("Reached here too")
     relevant_chunks = fetch_top_k_chunks(query_embedding, input_data.conversation_session_id, 3)
-    if not relevant_chunks:
-        return {"query": query, "answer": "No relevant information found.", "references": []}
 
-    # Synthesize LLM answer
+    if not relevant_chunks:
+        return {
+            "query": query,
+            "answer": "No relevant information found.",
+            "references": []
+        }
+
+    # Synthesize answer using the retrieved context
     answer = synthesize_answer(query, relevant_chunks)
+
+    # Format references with document_title, section_order, chunk_content
+    references = [
+        {
+            "document_title": chunk["document_title"],
+            "section_order": chunk["section_order"],
+            "chunk_content": chunk["chunk_content"]
+        }
+        for chunk in relevant_chunks
+    ]
 
     return {
         "query": query,
         "answer": answer,
-        "references": relevant_chunks,
+        "references": references,
         "confidence": "High" if answer else "Low"
     }
 
