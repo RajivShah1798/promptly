@@ -30,15 +30,19 @@ Promptly is a simple online service that helps you quickly find answers in your 
 ## Project Directory Structure
 
 ```
-├── assets/
-│   ├── process_user_queries_dag.png  # User Query Pipeline Worflow Diagram
-│   ├── rag_data_pipeline_dag.png  # Data Pipeline Workflow Diagram
+├── assets/                     # Diagrams and visual assets
+│   ├── process_user_queries_dag.png  # User Query Pipeline Workflow Diagram
+│   ├── rag_data_pipeline_dag.png     # Data Pipeline Workflow Diagram
+│   ├── Data Pipeline Architecture.png
+│   ├── Model Training & Deployment Architecture.png
+│   ├── Drift Detection.png
+│   ├── pipeline_optimization.png
 │
-├── data_pipeline/
-│   ├── dags/
-│   │   ├── dataPipeline.py  # User Queries DAG
-│   │   ├── rag_data_pipeline.py  # Document Processing DAG
-│   │   ├── scripts/
+├── data_pipeline/              # Data processing and ingestion pipeline
+│   ├── dags/                   # Airflow DAGs for pipeline orchestration
+│   │   ├── dataPipeline.py     # User Queries DAG
+│   │   ├── rag_data_pipeline.py # Document Processing DAG
+│   │   ├── scripts/            # Scripts for data preprocessing and ingestion
 │   │   │   ├── email_utils.py  # Email notifications
 │   │   │   ├── upload_data_GCS.py  # GCS Uploading
 │   │   │   ├── data_preprocessing/
@@ -54,19 +58,44 @@ Promptly is a simple online service that helps you quickly find answers in your 
 │   │   │   ├── test_data_pii_redact.py  # Unit tests for PII detection and redaction
 │   │   │   ├── test_rag_pipeline.py  # Unit tests for the RAG document chunking pipeline
 │   │   │   ├── test_user_queries.py  # Unit tests for the user queries processing pipeline
-│   ├── config.py  # API Keys & Configurations
-│   ├── README.md  # Data Pipeline Documentation
+│   ├── config.py               # API Keys & Configurations
+│   ├── README.md               # Data Pipeline Documentation
 │
-├── data/
-│   ├── rag_documents/  # Original PDFs & Text Files
-│   ├── preprocessed_docs_chunks.csv/  # Cleaned & Chunked Data
-│   ├── preprocessed_user_data.csv  # Processed User Queries
+├── model/                      # Model serving, testing, and deployment
+│   ├── serve.py                # FastAPI server for serving the model
+│   ├── deploy_server.py        # Deployment script for Google Cloud Vertex AI
+│   ├── Dockerfile              # Docker configuration for containerizing the model server
+│   ├── requirements.txt        # Python dependencies for the model
+│   ├── tests/                  # Unit tests for the model and APIs
+│   │   ├── api_test.py         # Test script for the REST API
+│   │   └── sdk_test.py         # Test script for SDK integration
+│   ├── README.md               # Model Directory Documentation
 │
-├── .dvc/  # DVC Configuration
-├── .gitignore
-├── .dvcignore
-├── README.md  # Project Overview
-├── requirements.txt  # Dependencies
+├── model_pipeline/             # Model training and fine-tuning pipeline
+│   ├── training/               # Training scripts and notebooks
+│   │   ├── promptly-finetuning.ipynb  # Model training Jupyter notebook
+│   │   ├── README.md           # Training-specific documentation
+│   ├── scripts/
+│   │   ├── bias_detection.py   # Script for detecting bias while training the model
+│   │   ├── load_data.py        # Load data from Supabase
+│   │   ├── streamlit_ui.py     # Streamlit user interface for the app
+│   ├── mlflow/
+│   │   ├── Dockerfile          # Docker file for setting up MLflow in GCP Instance
+│   ├── README.md               # Model Pipeline Documentation
+│
+├── data/                       # Data storage and processing
+│   ├── rag_documents/          # Original PDFs & Text Files
+│   ├── preprocessed_docs_chunks.csv  # Cleaned & Chunked Data
+│   ├── preprocessed_user_data.csv    # Processed User Queries
+│
+├── .github/workflows/          # CI/CD workflows
+│   ├── README.md               # GitHub Actions Documentation
+│
+├── .dvc/                       # DVC Configuration
+├── .gitignore                  # Git ignore file
+├── .dvcignore                  # DVC ignore file
+├── requirements.txt            # Python dependencies
+├── README.md                   # Global project documentation
 ```
 ---
 
@@ -85,13 +114,34 @@ Promptly is a simple online service that helps you quickly find answers in your 
 ## System Architecture
 
 ### 1. Data Pipeline:
-- Readme continues [here](./data_pipeline/README.md)
+![Data Pipeline Architecture](/assets/Data%20Pipeline%20Architecture.png)
+- The data pipeline automates document ingestion, preprocessing, and storage in Supabase.
+- For detailed documentation, refer to the [Data Pipeline README](./data_pipeline/README.md).
 
 ### 2. Model Training and Deployment Pipeline
-- Work in Progress
+![Model Training & Deployment Architecture](/assets/Model%20Training%20&%20Deployment%20Architecture.png)
+- The model training pipeline handles fine-tuning and evaluation of the model. For more details, refer to the [Model Training README](./model_pipeline/README.md).
+- The model serving is the deployment of model to Vertex AI. For more details, refer to the [Model Serving README](./model/README.md).
 
 ### 3. Data Drift Detection
-- Work in Progress
+![Data Drift Detection Architecture](/assets/Drift%20Detection.png)
+- User dominance is verified to check if the drift is caused by a single user or skewed usage pattern.
+- If drift is detected, it triggers downstream actions:
+- Drift trend analysis to monitor changes over time.
+- Model retraining is triggered automatically if needed.
+- The entire process is automated via an Apache Airflow DAG, which runs once a day.
+- Upon completion or detection, an email notification is sent to alert stakeholders.
+
+---
+
+## Key Features
+
+1. **Cross-Document Retrieval:** Enables querying across multiple documents for context-aware answers.
+2. **Fine-Tuned Model:** Uses a fine-tuned version of `Qwen/Qwen2.5-0.5B-Instruct` for text generation tasks.
+3. **Cloud Deployment:** Supports deployment to Google Cloud Vertex AI for scalable inference.
+4. **CI/CD Integration:** Automates model training and deployment using GitHub Actions.
+
+---
 
 
 ### Project proposal [View Here](https://docs.google.com/document/d/1ZARzFI9JG95JxkLO9lD2LJZfr6xIisEh2SVzuhyPN3M/edit?usp=sharing)
@@ -102,5 +152,5 @@ For any questions or issues, reach out to the Promptly team:
 
 - **Ronak Vadhaiya** - vadhaiya.r@northeastern.edu
 - **Sagar Bilwal** - bilwal.sagar@northeastern.edu
-- **Kushal Shankar** - kushalshankar03@gmail.com
 - **Rajiv Shah** - shah.rajiv1702@gmail.com
+- **Kushal Shankar** - kushalshankar03@gmail.com

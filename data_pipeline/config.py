@@ -21,9 +21,11 @@ DOCUMENT_TABLE = "documents"
 CHUNKS_TABLE = "document_chunks"
 
 # Test data configurations - organization and test user id
+ORG_ID = "4c93cb1d-da99-4638-8229-aacbd6dba312"
+UPLOAD_USER_ID = "test.user@gmail.com"
 IS_PRIVATE = False
-ORG_ID = 1
-UPLOAD_USER_ID = 1
+# ORG_ID = 1
+# UPLOAD_USER_ID = 1
 UPLOAD_TIME = datetime.now().isoformat()
 
 # RAG Documents Directory

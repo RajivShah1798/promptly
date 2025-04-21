@@ -78,9 +78,9 @@ def embed_and_store_chunks(chunked_data):
     Generates embeddings for document chunks and stores them in Supabase.
     """
     nomic.login(token=config.NOMIC_API_KEY)
-
+ 
     chunks_store = []
-
+ 
     for filename, chunks in chunked_data.items():
         try:
             output = embed.text(
@@ -88,12 +88,12 @@ def embed_and_store_chunks(chunked_data):
                 model=config.MODEL_NAME,
                 task_type=config.TASK_TYPE,
             )
-
+ 
             embeddings = output.get("embeddings")
         except Exception as e:
             logging.error(f"Error while embedding chunks: {e}")
             continue
-
+ 
         # Prepare document metadata
         document_data = {
             "location": filename,
@@ -102,12 +102,13 @@ def embed_and_store_chunks(chunked_data):
             "content": "\n".join(chunks),
             "upload_user_id": config.UPLOAD_USER_ID,
             "upload_time": datetime.now().isoformat(),
+            "conversation_session_id": None
         }
-
+ 
         response = supabase.table(config.DOCUMENT_TABLE).insert(document_data).execute()
         if response.data:
             document_id = response.data[0]["id"]
-
+ 
             # Insert chunk embeddings
             chunk_data = [
                 {
@@ -119,7 +120,7 @@ def embed_and_store_chunks(chunked_data):
                 }
                 for idx, chunk in enumerate(chunks)
             ]
-
+ 
             chunk_response = supabase.table(config.CHUNKS_TABLE).insert(chunk_data).execute()
             if chunk_response.data:
                 chunks_store.append(chunk_response.data)
@@ -128,5 +129,5 @@ def embed_and_store_chunks(chunked_data):
                 logging.error(f"Error inserting chunks for {filename}: {chunk_response}")
         else:
             logging.error(f"Error inserting document {filename}: {response}")
-
+ 
     return chunks_store

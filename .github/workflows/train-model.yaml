@@ -4,7 +4,7 @@ on:
   repository_dispatch:
     types: [model-training]
   push:
-    branches: ["model-training", "ronak/model-serving"]
+    branches: ["model-training", "ronak/model-serving", "main"]
 
 jobs:
   train_model:
