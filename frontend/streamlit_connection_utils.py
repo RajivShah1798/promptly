@@ -12,7 +12,7 @@ from typing import List
 import tempfile
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 import config
 
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +28,7 @@ def read_document(uploaded_files: List):
     """
     Reads the content of each uploaded file (PDF or TXT) and returns a dictionary with filenames as keys.
     """
-    document_contents = {}
+    document_contents = []
 
     for uploaded_file in uploaded_files:
         filename = uploaded_file.name
@@ -36,7 +36,10 @@ def read_document(uploaded_files: List):
         if filename.endswith(".txt"):
             # Read text content from file-like object
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-            document_contents[filename] = stringio.read()
+            # document_contents[filename] = stringio.read()
+            document_contents.append({
+                filename: stringio.read()
+            })
         
         elif filename.endswith(".pdf"):
             # Write to a temporary file since pymupdf expects a path
@@ -44,8 +47,10 @@ def read_document(uploaded_files: List):
                 tmp_file.write(uploaded_file.getvalue())
                 tmp_path = tmp_file.name
             
-            document_contents[filename] = pymupdf4llm.to_markdown(tmp_path)
-
+            # document_contents[filename] = pymupdf4llm.to_markdown(tmp_path)
+            document_contents.append({
+                filename: pymupdf4llm.to_markdown(tmp_path)
+            })
             os.remove(tmp_path)
 
     logging.info(f"Read {len(document_contents)} documents.")
