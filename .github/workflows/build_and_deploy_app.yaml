@@ -2,7 +2,7 @@ name: Build and Push to Artifact Registry
 
 on:
   push:
-    branches: ["model-trainig"]
+    branches: ["model-training"]
 
 env:
   PROJECT_ID: adroit-chemist-450622-c4
