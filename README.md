@@ -85,13 +85,28 @@ Promptly is a simple online service that helps you quickly find answers in your 
 ## System Architecture
 
 ### 1. Data Pipeline:
-- Readme continues [here](./data_pipeline/README.md)
+![Data Pipeline Architecture](/assets/Data%20Pipeline%20Architecture.png)
+- The data pipeline automates document ingestion, preprocessing, and storage in Supabase.
+- For detailed documentation, refer to the [Data Pipeline README](./data_pipeline/README.md).
 
 ### 2. Model Training and Deployment Pipeline
-- Work in Progress
+![Model Training & Deployment Architecturre](/assets/Model%20Training%20&%20Deployment%20Architecture.png)
+- The model training pipeline handles fine-tuning and evaluation of the model. For more details, refer to the [Model Training README](./model_pipeline/README.md).
+- The model serving is the deployment of model to Vertex AI. For more details, refer to the [Model Serving README](./model/README.md).
 
 ### 3. Data Drift Detection
 - Work in Progress
+
+---
+
+## Key Features
+
+1. **Cross-Document Retrieval:** Enables querying across multiple documents for context-aware answers.
+2. **Fine-Tuned Model:** Uses a fine-tuned version of `Qwen/Qwen2.5-0.5B-Instruct` for text generation tasks.
+3. **Cloud Deployment:** Supports deployment to Google Cloud Vertex AI for scalable inference.
+4. **CI/CD Integration:** Automates model training and deployment using GitHub Actions.
+
+---
 
 
 ### Project proposal [View Here](https://docs.google.com/document/d/1ZARzFI9JG95JxkLO9lD2LJZfr6xIisEh2SVzuhyPN3M/edit?usp=sharing)
