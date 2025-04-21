@@ -2,3 +2,88 @@
 h1, h2, h3, .stButton {
     font-family: 'Segoe UI', sans-serif;
 }
+
+/* Larger button, hover interaction */
+.stButton button {
+    background-color: #356AE6 !important;
+    color: white !important;
+    border-radius: 6px !important;
+    padding: 0.5em 1.2em !important;
+    font-size: 1em !important;
+}
+
+.stButton button:hover {
+    background-color: #274eb1 !important;
+    transition: 0.3s;
+}
+
+/* Optional Card Hover Highlight (streamlit hack via JS later if needed) */
+.stContainer {
+    border-radius: 10px;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.stContainer:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border: 1px solid #ddd !important;
+}
+
+/* Auth buttons */
+.stButton > button {
+    border-radius: 6px !important;
+    background-color: #356AE6 !important;
+    color: white !important;
+    font-weight: 500;
+    padding: 0.5em 1em;
+}
+
+.stButton > button:hover {
+    background-color: #2e55bd !important;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Optional card hover effect */
+div[data-testid="stContainer"] {
+    transition: box-shadow 0.25s ease;
+}
+
+div[data-testid="stContainer"]:hover {
+    box-shadow: 0px 0px 10px rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+
+/* 🔗 Remove Streamlit's hidden anchor links beside headings */
+h1 a:first-child {
+    display: none !important;
+}
+
+/* Fix alignment issues with Lottie and headers */
+.promptly-auth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.promptly-logo-text {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    color: #356AE6;
+    font-size: 2.8em;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 0.1em;
+    text-align: center;
+    text-shadow: 0px 0px 2px rgba(255,255,255,0.05);
+}
+
+.promptly-tagline {
+    font-size: 1.25em;
+    color: #AEB6C1;
+    font-weight: 500;
+    margin-top: -5px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.05);
+}
