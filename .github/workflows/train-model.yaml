@@ -5,6 +5,7 @@ on:
     types: [model-training]
   push:
     branches: ["model-training", "ronak/model-serving", "main"]
+  workflow_dispatch:
 
 jobs:
   train_model:
