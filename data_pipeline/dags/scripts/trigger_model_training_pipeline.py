@@ -2,7 +2,7 @@ import requests
 import os
 import config
 
-def trigger_model_training():
+def trigger_model_training(prefil_input):
     github_token = config.GITHUB_TOKEN
     if not github_token:
         raise ValueError("GITHUB_TOKEN environment variable is not set.")
